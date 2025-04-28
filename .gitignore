@@ -172,3 +172,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+watch-history*
+youtube_metadata_cache.json
+youtube-wrapped.json
+youtube-wrapped.html
