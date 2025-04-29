@@ -196,6 +196,20 @@
     </div>
 
     <div class="stats-card">
+        <h2>Your top categories</h2>
+        {% for category in category_names %}
+        <div class="stat-row">
+            <div class="rank">#{{ loop.index }}</div>
+            <div class="item-details">
+                <div class="item-title">
+                    {{ category }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="stats-card">
         <h2>Your top channels</h2>
         {% for channel, link in top_channels %}
         <div class="stat-row">
