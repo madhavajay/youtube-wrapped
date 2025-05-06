@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Wrapped</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FF0000;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status {
+            margin-right: 15px;
+            font-size: 24px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .complete {
+            color: #4CAF50;
+        }
+
+        .pending {
+            color: #FFC107;
+        }
+
+        .description {
+            flex-grow: 1;
+            font-size: 16px;
+        }
+
+        .action-btn {
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background-color: #CC0000;
+        }
+
+        .action-btn.disabled {
+            background-color: #ddd;
+            color: #aaa;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>YouTube Wrapped</h1>
+
+        <div class="checklist-item">
+            <div class="status {% if step_1_download %}complete{% else %}pending{% endif %}">
+                {% if step_1_download %}✓{% else %}?{% endif %}
+            </div>
+            <div class="description">Fetch YouTube Data</div>
+            <a href="/download" class="action-btn">Upload</a>
+        </div>
+
+        <div class="checklist-item">
+            <div
+                class="status {% if setup_api_key %}complete{% elif not step_1_download %}disabled{% else %}pending{% endif %}">
+                {% if setup_api_key %}✓{% else %}?{% endif %}
+            </div>
+            <div class="description">Setup YouTube API</div>
+            <a href="/api" class="action-btn {% if not step_1_download %}disabled{% endif %}">Configure</a>
+        </div>
+
+        <div class="checklist-item">
+            <div
+                class="status {% if step_3_summarize %}complete{% elif not step_2_enrich %}disabled{% else %}pending{% endif %}">
+                {% if step_3_summarize %}✓{% elif not step_2_enrich %}✗{% else %}?{% endif %}
+            </div>
+            <div class="description">Preview Results</div>
+            <a href="/summarize" class="action-btn {% if not step_2_enrich %}disabled{% endif %}">View</a>
+        </div>
+
+        <div class="checklist-item">
+            <div
+                class="status {% if step_4_publish %}complete{% elif not step_3_summarize %}disabled{% else %}pending{% endif %}">
+                {% if step_4_publish %}✓{% elif not step_3_summarize %}✗{% else %}?{% endif %}
+            </div>
+            <div class="description">Publish and Share</div>
+            <a href="/publish" class="action-btn {% if not step_3_summarize %}disabled{% endif %}">Publish</a>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Wrapped - Upload History</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FF0000;
+        }
+
+        .upload-container {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: border 0.3s ease;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+
+        .upload-container.drag-over {
+            border-color: #FF0000;
+            background-color: rgba(255, 0, 0, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .btn {
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background-color: #CC0000;
+        }
+
+        .instructions {
+            margin-top: 40px;
+        }
+
+        .instruction-step {
+            margin-bottom: 80px;
+            padding-left: 20px;
+            border-left: 3px solid #FF0000;
+        }
+
+        .instruction-step h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .instruction-step p {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status {
+            margin-right: 15px;
+            font-size: 24px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .complete {
+            color: #4CAF50;
+        }
+
+        .pending {
+            color: #FFC107;
+        }
+
+        .description {
+            flex-grow: 1;
+            font-size: 16px;
+        }
+
+        .action-btn {
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .action-btn:hover {
+            background-color: #CC0000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Upload Your YouTube Watch History</h1>
+
+        <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+            <div id="drop-area" class="upload-container">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drag and drop your watch-history.html file here</div>
+                <div>- or -</div>
+                <input type="file" id="file-input" name="file-input" accept=".html">
+                <button type="button" id="browse-button" class="btn">Browse Files</button>
+                <div id="file-name" class="file-name"></div>
+            </div>
+            <div style="text-align: center;">
+                <button type="submit" id="upload-button" class="btn" disabled>Upload History</button>
+            </div>
+        </form>
+
+        <div class="instructions">
+            <h2>How to Get Your YouTube Watch History</h2>
+
+            <div class="instruction-step">
+                <h3>Step 1: Go to Google Takeout</h3>
+                <p>Visit <a href="https://takeout.google.com" target="_blank">takeout.google.com</a> and sign in with
+                    your Google account.</p>
+                <p>Make sure to "Delect all" to only get Youtube data.</p>
+                <img src="images/download_step1.png" alt="Google Takeout homepage" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 2: Select YouTube Data</h3>
+                <p>Scroll down and only select "YouTube and YouTube Music".</p>
+                <img src="images/download_step2.png" alt="YouTube data selection" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 3: Customize YouTube Data</h3>
+                <p>Click on "All YouTube data included" button, then uncheck all options except "history" which contains
+                    your watch history and then click "OK".</p>
+                <img src="images/download_step3.png" alt="YouTube data options" class="image-placeholder"
+                    style="width:50%;">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 4: Create Export</h3>
+                <p>Click "Next step" and select your preferred export options. Then click "Create export".</p>
+                <img src="images/download_step4.png" alt="Export options" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 5: Configure Export</h3>
+                <p>Click "Next step" and select your preferred export options. Then click "Create export".</p>
+                <img src="images/download_step5.png" alt="Extracted files" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 6: Check Email</h3>
+                <p>If you only selected youtube "history" it should only take about 2 minutes to complete. Once the
+                    email arrives, click download.</p>
+                <img src="images/download_step6.png" alt="Extracted files" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 7: Download and Extract</h3>
+                <p>Once your export is ready, download the ZIP file and extract it. Navigate to the YouTube folder and
+                    find the watch-history.html file. Drag that file into the upload area at the top of this page.</p>
+                <img src="images/download_step7.png" alt="Extracted files" class="image-placeholder">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const browseButton = document.getElementById('browse-button');
+        const fileNameDisplay = document.getElementById('file-name');
+        const uploadButton = document.getElementById('upload-button');
+        const uploadForm = document.getElementById('upload-form');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // Highlight drop area
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.classList.add('drag-over');
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.classList.remove('drag-over');
+        });
+
+        // Drop handler
+        dropArea.addEventListener('drop', e => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        });
+
+        // Browse button click
+        browseButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File selected via input
+        fileInput.addEventListener('change', e => {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleFileSelection(file) {
+            console.log("Debug: File selected:", file.name);
+            console.log("Debug: File size:", file.size, "bytes");
+            console.log("Debug: File type:", file.type);
+
+            if (file.size === 0) {
+                alert("The selected file is empty (0 bytes). Please choose a valid file.");
+                resetFileInput();
+                return;
+            }
+
+            displayFileName(file.name);
+            uploadButton.disabled = false;
+
+            // Sync the file to the hidden input so it's available on form submission
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+        }
+
+        function displayFileName(name) {
+            fileNameDisplay.textContent = `Selected file: ${name}`;
+        }
+
+        function resetFileInput() {
+            fileInput.value = '';
+            fileNameDisplay.textContent = '';
+            uploadButton.disabled = true;
+        }
+
+        // Final check before submission
+        uploadForm.addEventListener('submit', e => {
+            const files = fileInput.files;
+            if (!files || files.length === 0 || files[0].size === 0) {
+                console.log("Debug: No valid file selected at submission.");
+                e.preventDefault();
+                alert("Please select a valid, non-empty file before uploading.");
+            } else {
+                console.log("Debug: Uploading file:", files[0].name, files[0].size, "bytes");
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>

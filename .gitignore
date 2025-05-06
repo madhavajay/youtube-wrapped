@@ -178,3 +178,6 @@ watch-history*
 youtube_metadata_cache.json
 youtube-wrapped.json
 youtube-wrapped.html
+
+/data/*
+/cache/*

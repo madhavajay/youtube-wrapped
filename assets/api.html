@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Wrapped - Setup YouTube API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FF0000;
+        }
+
+        .api-form {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            border-color: #FF0000;
+            outline: none;
+            box-shadow: 0 0 3px rgba(255, 0, 0, 0.3);
+        }
+
+        .btn {
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background-color: #CC0000;
+        }
+
+        .instructions {
+            margin-top: 40px;
+        }
+
+        .instruction-step {
+            margin-bottom: 80px;
+            padding-left: 20px;
+            border-left: 3px solid #FF0000;
+        }
+
+        .instruction-step h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .instruction-step p {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .note {
+            background-color: #FFF3CD;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            color: #856404;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status {
+            margin-right: 15px;
+            font-size: 24px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .complete {
+            color: #4CAF50;
+        }
+
+        .pending {
+            color: #FFC107;
+        }
+
+        .description {
+            flex-grow: 1;
+            font-size: 16px;
+        }
+
+        .action-btn {
+            background-color: #FF0000;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .action-btn:hover {
+            background-color: #CC0000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Setup YouTube API</h1>
+
+        <div class="api-form">
+            <form action="/api" method="post">
+                <div class="form-group">
+                    <label for="youtube-api-key" class="form-label">YouTube API Key</label>
+                    <input type="text" id="youtube-api-key" name="youtube-api-key" class="form-input"
+                        placeholder="Enter your YouTube API key" value="{{ youtube_api_key }}">
+                </div>
+                <button type="submit" class="btn">Save</button>
+            </form>
+
+            <div class="note">
+                <strong>Note:</strong> Your API key remains on your device and is only used to fetch additional metadata
+                about your watched videos.
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>How to Get Your YouTube API Key</h2>
+
+            <div class="instruction-step">
+                <h3>Step 1: Create a Google Cloud Project</h3>
+                <p>Go to the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> and
+                    create a new project or select an existing one.</p>
+                <img src="/images/enrich_step1.png" alt="Google Cloud Console project creation"
+                    class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 2: Enable the YouTube Data API</h3>
+                <p>Search for the "YouTube Data API v3", and click it.</p>
+                <img src="/images/enrich_step2.png" alt="Enabling YouTube Data API" class="image-placeholder">
+            </div>
+            <div class="instruction-step">
+                <h3>Step 3: Enable API</h3>
+                <p>Click the "Enable" button to activate the YouTube Data API for your project.</p>
+                <img src="/images/enrich_step3.png" alt="Enabling YouTube Data API" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 4: Navigate to Credentials</h3>
+                <p>In the left-hand menu, click on "Credentials" to proceed.</p>
+                <img src="/images/enrich_step4.png" alt="Navigating to Credentials" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 5: Create Credentials</h3>
+                <p>Click on "Create credentials" and select "API key". This will generate a new API key for you to use.
+                </p>
+                <img src="/images/enrich_step5.png" alt="Setting application restrictions" class="image-placeholder">
+            </div>
+
+            <div class="instruction-step">
+                <h3>Step 6: Copy API key</h3>
+                <p>Copy the API key and put it at the top of this page and click Save.</p>
+                <img src="/images/enrich_step6.png" alt="Setting API restrictions" class="image-placeholder">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
