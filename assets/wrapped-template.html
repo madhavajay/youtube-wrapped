@@ -184,16 +184,31 @@
         }
 
         .corner-image img:hover {
-            content: url("images/mwsyftbox_white_on.png");
+            content: url("https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/mwsyftbox_white_on.png");
         }
     </style>
+    <link rel="preload" as="image"
+        href="https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/mwsyftbox_white_on.png">
+    <link rel="preload" as="image"
+        href="https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/mwsyftbox_white_off.png">
+    <script defer src="https://static.addtoany.com/menu/page.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/madhavajay/youtube-wrapped/assets/syftbox-sdk.js"></script>
+
 </head>
 
 <body>
     <div class="container">
+        <div id="syftbox-api-badge"></div>
+        <script>
+            document.addEventListener("DOMContentLoaded", async () => {
+                await APIBadge.initialized;
+                APIBadge.show("https://github.com/madhavajay/youtube-wrapped");
+            });
+        </script>
         <div class="corner-image">
             <a href="https://github.com/OpenMined/syftbox" target="_blank">
-                <img src="images/mwsyftbox_white_off.png" alt="Made with SyftBox">
+                <img src="https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/mwsyftbox_white_off.png"
+                    alt="Made with SyftBox">
             </a>
         </div>
         <header>
@@ -202,20 +217,7 @@
         </header>
 
         <div>
-            <!-- AddToAny BEGIN -->
-            <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
-                <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
-                <a class="a2a_button_x"></a>
-                <a class="a2a_button_facebook"></a>
-                <a class="a2a_button_linkedin"></a>
-                <a class="a2a_button_bluesky"></a>
-                <a class="a2a_button_reddit"></a>
-                <a class="a2a_button_email"></a>
-                <a class="a2a_button_mastodon"></a>
-                <a class="a2a_button_copy_link"></a>
-            </div>
-            <script defer src="https://static.addtoany.com/menu/page.js"></script>
-            <!-- AddToAny END -->
+
         </div>
 
         <div class="stats-card">
@@ -282,38 +284,20 @@
             <h2>🎉 Your {{ year }} YouTube Wrapped 🎉</h2>
             <p class="summary-highlight">You spent {{ total_days }} days watching YouTube this year!</p>
             <p>Seems like {{ top_channels[0][0] }} was a big part of your year!</p>
-            <div class="social-links">
-                <a id="share-x" class="social-link" title="Share on X" target="_blank" rel="noopener noreferrer">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                        viewBox="0 0 24 24">
-                        <path
-                            d="M4.206 3h4.762l4.226 5.927L18.922 3h.872L13.27 10.51 20.25 21h-4.79l-4.45-6.241L5.079 21h-.872l6.912-7.676L3.75 3zm2.185 1.178l5.654 7.87L16.502 4.18h-2.428l-4.22 5.91L6.392 4.18h-.001zM6.53 19.82l5.14-5.68 4.47 6.319h2.33l-6.07-8.567-6.01 7.927h2.14z" />
-                    </svg>
-                </a>
-
-                <a id="share-linkedin" class="social-link" title="Share on LinkedIn" target="_blank"
-                    rel="noopener noreferrer">in</a>
-
-                <a id="share-reddit" class="social-link" title="Share on Reddit" target="_blank"
-                    rel="noopener noreferrer">👽</a>
+            <div class="a2a_kit a2a_kit_size_32 a2a_default_style" style="display: flex; justify-content: center;">
+                <a class="a2a_button_x"></a>
+                <a class="a2a_button_facebook"></a>
+                <a class="a2a_button_linkedin"></a>
+                <a class="a2a_button_bluesky"></a>
+                <a class="a2a_button_reddit"></a>
+                <a class="a2a_button_email"></a>
+                <a class="a2a_button_mastodon"></a>
+                <a class="a2a_button_copy_link"></a>
+                <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
             </div>
 
         </div>
-        <script>
-            const currentUrl = encodeURIComponent(window.location.href);
-            const text = encodeURIComponent("Check out my YouTube Wrapped!");
-            const title = encodeURIComponent("My YouTube Wrapped");
 
-            document.getElementById("share-x").href =
-                `https://x.com/intent/tweet?text=${text}&url=${currentUrl}`;
-
-            document.getElementById("share-linkedin").href =
-                `https://www.linkedin.com/sharing/share-offsite/?url=${currentUrl}`;
-
-            document.getElementById("share-reddit").href =
-                `https://reddit.com/submit?url=${currentUrl}&title=${title}`;
-
-        </script>
 
     </div>
 </body>
