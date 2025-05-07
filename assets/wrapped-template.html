@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Wrapped {{ year }}</title>
+    <meta property="og:url" content="{{ wrapped_url }}">
+    <meta property="og:title" content="YouTube Wrapped {{ year }}">
+    <meta property="og:description" content="Check out my YouTube stats for {{ year }}!">
+    <meta property="og:image" content="{{ wrapped_url }}youtube-wrapped-{{ year }}.png">
     <style>
         :root {
             --primary: #FF0000;
@@ -179,6 +183,13 @@
             z-index: 1000;
         }
 
+        #syftbox-api-badge {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
         .corner-image img {
             width: 100px;
         }
@@ -193,18 +204,17 @@
         href="https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/mwsyftbox_white_off.png">
     <script defer src="https://static.addtoany.com/menu/page.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/madhavajay/youtube-wrapped/assets/syftbox-sdk.js"></script>
-
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            await APIBadge.initialized;
+            APIBadge.show("https://github.com/madhavajay/youtube-wrapped");
+        });
+    </script>
 </head>
 
 <body>
+    <div id="syftbox-api-badge"></div>
     <div class="container">
-        <div id="syftbox-api-badge"></div>
-        <script>
-            document.addEventListener("DOMContentLoaded", async () => {
-                await APIBadge.initialized;
-                APIBadge.show("https://github.com/madhavajay/youtube-wrapped");
-            });
-        </script>
         <div class="corner-image">
             <a href="https://github.com/OpenMined/syftbox" target="_blank">
                 <img src="https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/mwsyftbox_white_off.png"

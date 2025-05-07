@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Wrapped</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #101010;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .wrapped-container {
+            width: 600px;
+            height: 600px;
+            background-color: #181818;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .red-accent {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 8px;
+            background-color: #FF0000;
+        }
+
+        .content {
+            padding: 40px;
+            color: white;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FF0000;
+            line-height: 1;
+        }
+
+        .year {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FF0000;
+            margin-bottom: 30px;
+        }
+
+        .stats-container {
+            display: flex;
+            margin-bottom: 40px;
+        }
+
+        .stat-box {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #AAAAAA;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .top-video-section {
+            margin-bottom: 30px;
+        }
+
+        .section-label {
+            font-size: 20px;
+            color: #FF0000;
+            margin-bottom: 15px;
+        }
+
+        .video-container {
+            display: flex;
+            align-items: center;
+            background-color: #222222;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .video-thumbnail {
+            width: 120px;
+            height: 80px;
+            background-color: #333;
+            border-radius: 6px;
+            margin-right: 15px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .more-text {
+            font-size: 18px;
+            color: #AAAAAA;
+            margin-top: 20px;
+        }
+
+        .syftbox-logo {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #AAAAAA;
+        }
+
+        .logo-cube {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(20deg) rotateY(45deg);
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(45deg, #f3a, #a3f);
+        }
+
+        .face-top {
+            transform: rotateX(90deg) translateZ(15px);
+            background: linear-gradient(135deg, #fa5, #5af);
+        }
+
+        .face-front {
+            transform: translateZ(15px);
+            background: linear-gradient(45deg, #f3a, #a3f);
+        }
+
+        .face-right {
+            transform: rotateY(90deg) translateZ(15px);
+            background: linear-gradient(225deg, #5fa, #a5f);
+        }
+
+        .youtube-logo {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            width: 40px;
+            height: 40px;
+            background-color: #FF0000;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 17px solid white;
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapped-container">
+        <div class="red-accent"></div>
+        <div class="content">
+            <div class="header">
+                <div class="title">Youtube Wrapped</div>
+                <div class="year">2024</div>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-label">Minutes Watched</div>
+                    <div class="stat-value">56,223</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Days Watched</div>
+                    <div class="stat-value">300</div>
+                </div>
+            </div>
+
+            <div class="top-video-section">
+                <div class="section-label">Top Video</div>
+                <div class="video-container">
+                    <div class="video-thumbnail">
+                        <img src="/api/placeholder/120/80" alt="Top video thumbnail">
+                    </div>
+                    <div class="video-title">Old MacDonald Had A Farm | Nursery Rhymes | Super Simple Songs</div>
+                </div>
+            </div>
+
+            <div class="more-text">and more...</div>
+
+            <div class="syftbox-logo">
+                <div class="logo-cube">
+                    <div class="cube-face face-front"></div>
+                    <div class="cube-face face-right"></div>
+                    <div class="cube-face face-top"></div>
+                </div>
+                Made with SyftBox
+            </div>
+
+            <div class="youtube-logo">
+                <div class="triangle"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

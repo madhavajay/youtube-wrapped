@@ -243,7 +243,7 @@ def generate_wrapped_json(year: int | str):
         f.write(json.dumps(json_stats))
 
 
-def create_wrapped_page(year: int | str):
+def create_wrapped_page(year: int | str, client):
     generate_wrapped_json(year)
 
     data = {}
@@ -276,6 +276,7 @@ def create_wrapped_page(year: int | str):
         top_videos=data["top_videos_combined"],
         category_names=data["top_categories"],
         total_days=data["total_days"],
+        wrapped_url = f"https://syftboxdev.openmined.org/datasites/{client.email}/public/youtube-wrapped/",
     )
 
     # Write to output file

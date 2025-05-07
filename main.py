@@ -125,8 +125,10 @@ async def summarize(request: Request, year: int | str = datetime.now().year - 1)
     pipeline_state = YoutubeDataPipelineState()
 
     from wrapped import create_wrapped_page
+    from share_image import create_share_image
+    create_share_image(year, current_dir / "cache" / f"youtube-wrapped-{year}.png")
+    rendered_html = create_wrapped_page(year, client)
 
-    rendered_html = create_wrapped_page(year)
 
     return HTMLResponse(rendered_html)
 
@@ -372,6 +374,10 @@ async def publish(year: int | str):
     """Endpoint to publish a wrapped HTML file for a given year."""
     wrapped_path = client.datasite_path / "public" / app_name
     shutil.copy(current_dir / "cache" / f"youtube-wrapped-{year}.html", wrapped_path / f"youtube-wrapped-{year}.html")
+    if not (current_dir / "cache" / f"youtube-wrapped-{year}.png").exists():
+        from share_image import create_share_image
+        create_share_image(year, current_dir / "cache" / f"youtube-wrapped-{year}.png")
+    shutil.copy(current_dir / "cache" / f"youtube-wrapped-{year}.png", wrapped_path / f"youtube-wrapped-{year}.png")
     return RedirectResponse(url="/", status_code=303)
 
 @app.get("/unpublish", include_in_schema=False)
@@ -379,6 +385,7 @@ async def unpublish(year: int | str):
     """Endpoint to publish a wrapped HTML file for a given year."""
     wrapped_path = client.datasite_path / "public" / app_name
     os.remove(wrapped_path / f"youtube-wrapped-{year}.html")
+    os.remove(wrapped_path / f"youtube-wrapped-{year}.png")
     return RedirectResponse(url="/", status_code=303)
 
 
