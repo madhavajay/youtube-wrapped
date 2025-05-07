@@ -1,6 +1,7 @@
 
 import pandas as pd
 import json
+import warnings
 import re
 import warnings
 import tzlocal
@@ -26,8 +27,11 @@ def generate_wrapped_json(year: int | str):
     # Load your CSV
     df = pd.read_csv(f'./data/watch-history-enriched.csv')
 
-    # Step 1: Parse datetime normally
-    df['watch_time_dt'] = pd.to_datetime(df['watch_time'], errors='coerce')
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=FutureWarning)
+        warnings.simplefilter("ignore", category=UserWarning)
+        df['watch_time_dt'] = pd.to_datetime(df['watch_time'], errors='coerce')
+
     # Step 2: Detect system timezone
     local_timezone = tzlocal.get_localzone()
     # Step 3: Fix timezone correctly for each row

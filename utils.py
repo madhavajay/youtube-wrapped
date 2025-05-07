@@ -126,7 +126,7 @@ class YoutubeDataPipelineState:
         enriched_data_path = self.get_enriched_data_path()
         if os.path.exists(enriched_data_path):
             df = pd.read_csv(enriched_data_path)
-            filtered_df = df[df["error"].str.contains("not found", case=False, na=False)]
+            filtered_df = df[df["error"].astype(str).str.contains("not found", case=False, na=False)]
             return len(filtered_df)
         return 0
 

@@ -31,6 +31,10 @@ app_name = "youtube-wrapped"
 wrapped_path = client.datasite_path / "public" / app_name
 client.makedirs(wrapped_path)
 
+data_dir = Path("./data")
+data_dir.mkdir(parents=True, exist_ok=True)
+
+
 # @box.on_request("/ping")
 # def ping_handler(ping: PingRequest) -> PongResponse:
 #     """Handle a ping request and return a pong response."""
@@ -62,39 +66,41 @@ async def ui_home(request: Request):
     
     years = pipeline_state.get_years()
     year_stats = []
-    for year in years:
-        json_file_path = current_dir / "cache" / f"youtube-wrapped-{year}.json"
-        if not json_file_path.exists():
-            generate_wrapped_json(year)
 
+    if pipeline_state.enriched_data_exists():
+        for year in years:
+            json_file_path = current_dir / "cache" / f"youtube-wrapped-{year}.json"
+            if not json_file_path.exists():
+                generate_wrapped_json(year)
+
+            if json_file_path.exists():
+                with open(json_file_path, "r") as json_file:
+                    stats = json.load(json_file)
+                    published = (wrapped_path / f"youtube-wrapped-{year}.html").exists()
+                    year_stats.append({
+                        "total_views": int(stats["total_views"]),
+                        "total_hours": int(stats['total_hours']),
+                        "total_days": int(stats["total_days"]),
+                        "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
+                        "year": year,
+                        "published": published
+                    })
+
+        json_file_path = current_dir / "cache" / f"youtube-wrapped-all.json"
+        if not json_file_path.exists():
+            generate_wrapped_json("all")
         if json_file_path.exists():
             with open(json_file_path, "r") as json_file:
                 stats = json.load(json_file)
-                published = (wrapped_path / f"youtube-wrapped-{year}.html").exists()
+                published = (wrapped_path / f"youtube-wrapped-all.html").exists()
                 year_stats.append({
                     "total_views": int(stats["total_views"]),
                     "total_hours": int(stats['total_hours']),
                     "total_days": int(stats["total_days"]),
                     "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
-                    "year": year,
+                    "year": "all",
                     "published": published
-                })
-
-    json_file_path = current_dir / "cache" / f"youtube-wrapped-all.json"
-    if not json_file_path.exists():
-        generate_wrapped_json("all")
-    if json_file_path.exists():
-        with open(json_file_path, "r") as json_file:
-            stats = json.load(json_file)
-            published = (wrapped_path / f"youtube-wrapped-all.html").exists()
-            year_stats.append({
-                "total_views": int(stats["total_views"]),
-                "total_hours": int(stats['total_hours']),
-                "total_days": int(stats["total_days"]),
-                "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
-                "year": "all",
-                "published": published
-            })    
+                })    
 
     template = jinja2.Template(template_content)
     wrapped_url = f"https://syftboxdev.openmined.org/datasites/{client.email}/public/youtube-wrapped/"
