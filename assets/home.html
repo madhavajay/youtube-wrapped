@@ -29,7 +29,7 @@
 
         .checklist-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             padding: 12px 0;
             border-bottom: 1px solid #eee;
         }
@@ -112,6 +112,48 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* New styles for the years table */
+        .years-section {
+            flex-direction: column;
+        }
+
+        .years-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .years-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+
+        .years-table th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .years-table td {
+            padding: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .years-table .action-container {
+            display: flex;
+            gap: 5px;
+        }
+
+        .years-table .action-btn {
+            padding: 6px 12px;
+            min-width: 30px;
+            font-size: 13px;
+        }
     </style>
 </head>
 
@@ -150,8 +192,9 @@
         </div>
 
         <div class="checklist-item">
-            <div class="status {% if source_data_exists and setup_api_key %}pending{% else %}disabled{% endif %}">
-                {% if source_data_exists and setup_api_key %}?{% else %}✗{% endif %}
+            <div
+                class="status {% if is_complete %}complete{% elif source_data_exists and setup_api_key %}pending{% else %}disabled{% endif %}">
+                {% if is_complete %}✓{% elif source_data_exists and setup_api_key %}?{% else %}✗{% endif %}
             </div>
             <div class="description">Processing
                 {% if enriched_data_path %}
@@ -159,12 +202,16 @@
                 {% endif %}
             </div>
             <div class="file-stats" id="processing-stats">
-                {{ processed_rows }}/{{ total_rows }}
+                {{ processed_rows }}/{{ total_rows }}<br />
+                ✓ {{ enriched_rows }} <br />
+                ✗ {{ missing_rows }}
             </div>
             <a href="javascript:void(0)" id="process-btn"
-                class="action-btn {% if not (source_data_exists and setup_api_key) %}disabled{% endif %}"
+                class="action-btn {% if not (source_data_exists and setup_api_key) or is_complete %}disabled{% endif %}"
                 onclick="toggleProcessing()">
-                {% if is_processing %}
+                {% if is_complete %}
+                Complete
+                {% elif is_processing %}
                 <span class="spinner"></span>Processing
                 {% else %}
                 Process
@@ -172,22 +219,48 @@
             </a>
         </div>
 
-        <div class="checklist-item">
-            <div
-                class="status {% if step_3_summarize %}complete{% elif not step_2_enrich %}disabled{% else %}pending{% endif %}">
-                {% if step_3_summarize %}✓{% elif not step_2_enrich %}✗{% else %}?{% endif %}
+        <!-- Modified years section with table -->
+        <div class="checklist-item years-section">
+            <div class="years-header">
+                <div class="status {% if is_complete %}complete{% else %}pending{% endif %}">
+                    {% if is_complete %}✓{% else %}?{% endif %}
+                </div>
+                <div class="description">Preview Results</div>
             </div>
-            <div class="description">Preview Results</div>
-            <a href="/summarize" class="action-btn {% if not step_2_enrich %}disabled{% endif %}">View</a>
-        </div>
 
-        <div class="checklist-item">
-            <div
-                class="status {% if step_4_publish %}complete{% elif not step_3_summarize %}disabled{% else %}pending{% endif %}">
-                {% if step_4_publish %}✓{% elif not step_3_summarize %}✗{% else %}?{% endif %}
-            </div>
-            <div class="description">Publish and Share</div>
-            <a href="/publish" class="action-btn {% if not step_3_summarize %}disabled{% endif %}">Publish</a>
+            <table class="years-table">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Views</th>
+                        <th>Hours</th>
+                        <th>Days Watched</th>
+                        <th>Avg Per Day</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for year_stats in years %}
+                    <tr>
+                        <td>{{ year_stats.year }}</td>
+                        <td>{{ year_stats.total_views|default('--') }}</td>
+                        <td>{{ year_stats.total_hours|default('--') }}</td>
+                        <td>{{ year_stats.total_days|default('--') }}</td>
+                        <td>{{ year_stats.average_per_day|default('--') }}</td>
+                        <td class="action-container">
+                            <a href="/summarize?year={{ year_stats.year }}" class="action-btn" target="_blank">View</a>
+                            <a href="/{% if year_stats.published %}unpublish{% else %}publish{% endif %}?year={{ year_stats.year }}"
+                                class="action-btn">{% if year_stats.published %}Remove{% else %}Publish{% endif
+                                %}</a>
+                            {% if year_stats.published %}
+                            <a href="{{ wrapped_url }}youtube-wrapped-{{ year_stats.year }}.html" target="_blank"
+                                class="action-btn">&#128206;</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -276,9 +349,10 @@
                     const processingStats = document.getElementById('processing-stats');
                     processingStats.textContent = `${data.processed_rows}/${data.total_rows}`;
 
+                    const processBtn = document.getElementById('process-btn');
+
                     // If processing is complete
                     if (data.is_complete) {
-                        const processBtn = document.getElementById('process-btn');
                         processBtn.innerHTML = 'Complete';
                         processBtn.classList.add('disabled');
                         stopPolling();
@@ -287,6 +361,10 @@
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
+                    } else if (!data.is_processing) {
+                        // If processing is not active
+                        processBtn.innerHTML = 'Process';
+                        processBtn.classList.remove('disabled');
                     }
                 })
                 .catch(error => {

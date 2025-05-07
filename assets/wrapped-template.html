@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Wrapped {{ year }}</title>
+    <style>
+        :root {
+            --primary: #FF0000;
+            --secondary: #282828;
+            --text: #FFFFFF;
+            --accent: #cc0000;
+            --bg: #0f0f0f;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            background: linear-gradient(90deg, #FF0000, #FF5555);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+
+        .stats-card {
+            background-color: var(--secondary);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 6px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+        }
+
+        .stats-card h2 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.6rem;
+        }
+
+        .big-number {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .context {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .rank {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-right: 15px;
+            min-width: 30px;
+        }
+
+        .item-details {
+            flex-grow: 1;
+        }
+
+        .item-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 1.1rem;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .summary-card {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .summary-card h2 {
+            margin-top: 0;
+        }
+
+        .summary-highlight {
+            font-size: 1.3rem;
+            margin: 20px 0;
+        }
+
+        .share-btn {
+            display: inline-block;
+            background-color: white;
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* For mobile devices */
+        @media (max-width: 600px) {
+            .big-number {
+                font-size: 2.5rem;
+            }
+
+            .stat-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .thumbnail {
+                margin-top: 10px;
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        .corner-image {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .corner-image img {
+            width: 100px;
+        }
+
+        .corner-image img:hover {
+            content: url("images/mwsyftbox_white_on.png");
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="corner-image">
+            <a href="https://github.com/OpenMined/syftbox" target="_blank">
+                <img src="images/mwsyftbox_white_off.png" alt="Made with SyftBox">
+            </a>
+        </div>
+        <header>
+            <h1>Your {{ year }} Wrapped</h1>
+            <p class="subtitle">Your YouTube journey this year in numbers</p>
+        </header>
+
+        <div>
+            <!-- AddToAny BEGIN -->
+            <div class="a2a_kit a2a_kit_size_32 a2a_default_style">
+                <a class="a2a_dd" href="https://www.addtoany.com/share"></a>
+                <a class="a2a_button_x"></a>
+                <a class="a2a_button_facebook"></a>
+                <a class="a2a_button_linkedin"></a>
+                <a class="a2a_button_bluesky"></a>
+                <a class="a2a_button_reddit"></a>
+                <a class="a2a_button_email"></a>
+                <a class="a2a_button_mastodon"></a>
+                <a class="a2a_button_copy_link"></a>
+            </div>
+            <script defer src="https://static.addtoany.com/menu/page.js"></script>
+            <!-- AddToAny END -->
+        </div>
+
+        <div class="stats-card">
+            <h2>You watched a total of</h2>
+            <div class="big-number">{{ total_hours }} hours</div>
+            <p class="context">That's {{ total_minutes }} minutes of YouTube content!</p>
+            <p class="context">You spent around {{ average_hours }} hours and {{ average_minutes }} minutes on YouTube
+                each day you watched videos.</p>
+        </div>
+
+        <div class="stats-card">
+            <h2>Your biggest day was</h2>
+            <div class="big-number">{{ top_day_date }}</div>
+            <p class="context">You watched {{ top_day_minutes }} minutes on that day!</p>
+            <p class="context">What were you binge-watching?</p>
+        </div>
+
+        <div class="stats-card">
+            <h2>Your top categories</h2>
+            {% for category in category_names %}
+            <div class="stat-row">
+                <div class="rank">#{{ loop.index }}</div>
+                <div class="item-details">
+                    <div class="item-title">
+                        {{ category }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="stats-card">
+            <h2>Your top channels</h2>
+            {% for channel, link in top_channels %}
+            <div class="stat-row">
+                <div class="rank">#{{ loop.index }}</div>
+                <div class="item-details">
+                    <div class="item-title">
+                        <a href="{{ link }}" style="color: white; text-decoration: none;" target="_blank">{{ channel
+                            }}</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="stats-card">
+            <h2>Your top videos</h2>
+            {% for video, thumbnail, link in top_videos %}
+            <div class="stat-row">
+                <div class="rank">#{{ loop.index }}</div>
+                <div class="item-details">
+                    <div class="item-title">
+                        <a href="{{ link }}" style="color: white; text-decoration: none;" target="_blank">{{ video
+                            }}</a>
+                    </div>
+                </div>
+                <img class="thumbnail" src="{{ thumbnail }}" alt="{{ video }} thumbnail">
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="summary-card">
+            <h2>🎉 Your {{ year }} YouTube Wrapped 🎉</h2>
+            <p class="summary-highlight">You spent {{ total_days }} days watching YouTube this year!</p>
+            <p>Seems like {{ top_channels[0][0] }} was a big part of your year!</p>
+            <div class="social-links">
+                <a id="share-x" class="social-link" title="Share on X" target="_blank" rel="noopener noreferrer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                            d="M4.206 3h4.762l4.226 5.927L18.922 3h.872L13.27 10.51 20.25 21h-4.79l-4.45-6.241L5.079 21h-.872l6.912-7.676L3.75 3zm2.185 1.178l5.654 7.87L16.502 4.18h-2.428l-4.22 5.91L6.392 4.18h-.001zM6.53 19.82l5.14-5.68 4.47 6.319h2.33l-6.07-8.567-6.01 7.927h2.14z" />
+                    </svg>
+                </a>
+
+                <a id="share-linkedin" class="social-link" title="Share on LinkedIn" target="_blank"
+                    rel="noopener noreferrer">in</a>
+
+                <a id="share-reddit" class="social-link" title="Share on Reddit" target="_blank"
+                    rel="noopener noreferrer">👽</a>
+            </div>
+
+        </div>
+        <script>
+            const currentUrl = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent("Check out my YouTube Wrapped!");
+            const title = encodeURIComponent("My YouTube Wrapped");
+
+            document.getElementById("share-x").href =
+                `https://x.com/intent/tweet?text=${text}&url=${currentUrl}`;
+
+            document.getElementById("share-linkedin").href =
+                `https://www.linkedin.com/sharing/share-offsite/?url=${currentUrl}`;
+
+            document.getElementById("share-reddit").href =
+                `https://reddit.com/submit?url=${currentUrl}&title=${title}`;
+
+        </script>
+
+    </div>
+</body>
+
+</html>

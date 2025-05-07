@@ -93,7 +93,8 @@ class YoutubeDataPipelineState:
         """Sets the keep_running state."""
         self.config_data["keep_running"] = keep_running
         self.save_config()
-    def get_processed_rows(self) -> int:
+
+    def get_enriched_rows(self) -> int:
         """Returns the number of processed rows with a valid duration."""
         enriched_data_path = self.get_enriched_data_path()
         if os.path.exists(enriched_data_path):
@@ -101,6 +102,34 @@ class YoutubeDataPipelineState:
             return df['duration_seconds'].notna().sum()
         return 0
     
+    def get_processed_rows(self) -> int:
+        """Returns the number of processed rows with a valid duration."""
+        enriched_data_path = self.get_enriched_data_path()
+        if os.path.exists(enriched_data_path):
+            df = pd.read_csv(enriched_data_path)
+            return len(df)
+        return 0
+    
+    def get_years(self) -> list:
+        """Returns a sorted list of unique years from the 'watch_time_dt' column."""
+        enriched_data_path = self.get_enriched_data_path()
+        if os.path.exists(enriched_data_path):
+            df = pd.read_csv(enriched_data_path)
+            # Ensure 'watch_time_dt' is parsed as datetime
+            df['watch_time_dt'] = pd.to_datetime(df['watch_time_dt'], errors='coerce')
+            years = df['watch_time_dt'].dropna().dt.year.unique()
+            return sorted(years.tolist())
+        return []
+    
+    def get_missing_rows(self) -> int:
+        """Returns the number of rows with errors indicating 'not found'."""
+        enriched_data_path = self.get_enriched_data_path()
+        if os.path.exists(enriched_data_path):
+            df = pd.read_csv(enriched_data_path)
+            filtered_df = df[df["error"].str.contains("not found", case=False, na=False)]
+            return len(filtered_df)
+        return 0
+
     def get_total_rows(self) -> int:
         """Returns the total number of rows."""
         watch_history_csv_path = self.get_watch_history_csv_path()

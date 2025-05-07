@@ -1,5 +1,6 @@
 from __future__ import annotations
 from fastapi import BackgroundTasks
+import shutil
 import os
 import pandas as pd
 import asyncio
@@ -13,16 +14,22 @@ from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
 from datetime import datetime, timezone
 from metadata import process_rows
-
+from wrapped import generate_wrapped_json
 from loguru import logger
 from pydantic import BaseModel, Field
 from syft_event import SyftEvents
 import jinja2
-
+from syft_core import Client as SyftboxClient
+from syft_core import SyftClientConfig
 from utils import YoutubeDataPipelineState
 
 box = SyftEvents("youtube-wrapped")
 
+config = SyftClientConfig.load()
+client = SyftboxClient(config)
+app_name = "youtube-wrapped"
+wrapped_path = client.datasite_path / "public" / app_name
+client.makedirs(wrapped_path)
 
 # @box.on_request("/ping")
 # def ping_handler(ping: PingRequest) -> PongResponse:
@@ -53,8 +60,44 @@ async def ui_home(request: Request):
     with open(template_path) as f:
         template_content = f.read()
     
-    template = jinja2.Template(template_content)
+    years = pipeline_state.get_years()
+    year_stats = []
+    for year in years:
+        json_file_path = current_dir / "cache" / f"youtube-wrapped-{year}.json"
+        if not json_file_path.exists():
+            generate_wrapped_json(year)
 
+        if json_file_path.exists():
+            with open(json_file_path, "r") as json_file:
+                stats = json.load(json_file)
+                published = (wrapped_path / f"youtube-wrapped-{year}.html").exists()
+                year_stats.append({
+                    "total_views": int(stats["total_views"]),
+                    "total_hours": int(stats['total_hours']),
+                    "total_days": int(stats["total_days"]),
+                    "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
+                    "year": year,
+                    "published": published
+                })
+
+    json_file_path = current_dir / "cache" / f"youtube-wrapped-all.json"
+    if not json_file_path.exists():
+        generate_wrapped_json("all")
+    if json_file_path.exists():
+        with open(json_file_path, "r") as json_file:
+            stats = json.load(json_file)
+            published = (wrapped_path / f"youtube-wrapped-all.html").exists()
+            year_stats.append({
+                "total_views": int(stats["total_views"]),
+                "total_hours": int(stats['total_hours']),
+                "total_days": int(stats["total_days"]),
+                "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
+                "year": "all",
+                "published": published
+            })    
+
+    template = jinja2.Template(template_content)
+    wrapped_url = f"https://syftboxdev.openmined.org/datasites/{client.email}/public/youtube-wrapped/"
     rendered_content = template.render(
         source_data_exists=pipeline_state.source_data_exists(),
         enriched_data_exists=pipeline_state.enriched_data_exists(),
@@ -67,11 +110,25 @@ async def ui_home(request: Request):
         total_rows=pipeline_state.get_total_rows(),
         is_processing=pipeline_state.is_processing(),
         processed_rows=pipeline_state.get_processed_rows(),
-        enriched_data_path=pipeline_state.get_enriched_data_path()
+        enriched_data_path=pipeline_state.get_enriched_data_path(),
+        enriched_rows=pipeline_state.get_enriched_rows(),
+        missing_rows=pipeline_state.get_missing_rows(),
+        is_complete=bool(pipeline_state.get_processed_rows() == pipeline_state.get_total_rows()),
+        years=year_stats,
+        wrapped_url=wrapped_url
     )
 
     return HTMLResponse(rendered_content)
 
+@app.get("/summarize", response_class=JSONResponse, include_in_schema=False)
+async def summarize(request: Request, year: int | str = datetime.now().year - 1):
+    pipeline_state = YoutubeDataPipelineState()
+
+    from wrapped import create_wrapped_page
+
+    rendered_html = create_wrapped_page(year)
+
+    return HTMLResponse(rendered_html)
 
 
 @app.post("/start-processing", include_in_schema=False)
@@ -138,14 +195,19 @@ async def processing_status():
     is_processing = pipeline_state.is_processing()
     
     # Get the current processing stats
-    processed_rows = pipeline_state.get_processed_rows()
+    
     total_rows = pipeline_state.get_total_rows()
+    processed_rows = pipeline_state.get_processed_rows()
+    enriched_rows = pipeline_state.get_enriched_rows()
+    missing_rows = pipeline_state.get_missing_rows()
     
     return JSONResponse({
         "is_processing": bool(is_processing),
-        "processed_rows": int(processed_rows),
         "total_rows": int(total_rows),
-        "is_complete": bool(not is_processing and processed_rows == total_rows)
+        "processed_rows": int(processed_rows),
+        "enriched_rows": int(enriched_rows),
+        "missing_rows": int(missing_rows),
+        "is_complete": bool(processed_rows == total_rows)
     })
 
 
@@ -303,7 +365,21 @@ async def api_setup(request: Request):
         logger.info(f"Received YouTube API token: {youtube_api_token}")
 
         return RedirectResponse(url="/", status_code=303)
-        
+
+
+@app.get("/publish", include_in_schema=False)
+async def publish(year: int | str):
+    """Endpoint to publish a wrapped HTML file for a given year."""
+    wrapped_path = client.datasite_path / "public" / app_name
+    shutil.copy(current_dir / "cache" / f"youtube-wrapped-{year}.html", wrapped_path / f"youtube-wrapped-{year}.html")
+    return RedirectResponse(url="/", status_code=303)
+
+@app.get("/unpublish", include_in_schema=False)
+async def unpublish(year: int | str):
+    """Endpoint to publish a wrapped HTML file for a given year."""
+    wrapped_path = client.datasite_path / "public" / app_name
+    os.remove(wrapped_path / f"youtube-wrapped-{year}.html")
+    return RedirectResponse(url="/", status_code=303)
 
 
 def get_assigned_port():

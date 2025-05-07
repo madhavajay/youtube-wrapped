@@ -26,28 +26,56 @@ def save_metadata_cache(cache):
     with open(METADATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(cache, f, indent=2, ensure_ascii=False)
 
-def fetch_video_metadata(video_id, api_key, cache):
-    if video_id in cache and cache[video_id] is not None:
-        return cache[video_id]
+def fetch_video_metadata(video_ids, api_key, cache):
+    results = {}
 
-    url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id={video_id}&key={api_key}"
-    
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an error for bad responses
-        data = response.json()
+    # Retrieve cached metadata
+    for video_id in video_ids:
+        if video_id is not None:
+            if video_id in cache and cache[video_id] is not None:
+                results[video_id] = cache[video_id]
+            else:
+                results[video_id] = None  # Store None for uncached video_id
 
-        if 'items' in data and data['items']:
-            metadata = data['items'][0]
-            cache[video_id] = metadata
-            return metadata
-        else:
-            warning_message = f"Warning: Video ID {video_id} not found or inaccessible."
-            return warning_message
-    except Exception as e:
-        error_message = str(e)
-        print(f"Error fetching metadata for Video ID {video_id}: {error_message}")
-        return error_message
+    uncached_video_ids = [video_id for video_id, metadata in results.items() if metadata is None]
+
+    # Batch request for uncached video IDs
+    url = "https://www.googleapis.com/youtube/v3/videos"
+    for i in range(0, len(uncached_video_ids), 50):
+        batch = uncached_video_ids[i:i + 50]
+        params = {
+            "part": "snippet,contentDetails,statistics",
+            "id": ",".join(batch),
+            "key": api_key
+        }
+        
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            for item in data.get('items', []):
+                video_id = item.get("id")
+                if video_id:
+                    cache[video_id] = item
+                    results[video_id] = item
+
+            # Handle video IDs not found in the response
+            found_ids = {item.get("id") for item in data.get('items', [])}
+            not_found_ids = set(batch) - found_ids
+            for video_id in not_found_ids:
+                warning_message = f"Warning: Video ID {video_id} not found or inaccessible."
+                results[video_id] = warning_message
+
+        except Exception as e:
+            error_message = str(e)
+            for video_id in batch:
+                print(f"Error fetching metadata for Video ID {video_id}: {error_message}")
+                results[video_id] = error_message
+
+    # Reconstruct the original order of video_ids and return the results as a list
+    ordered_results = [results.get(video_id, None) for video_id in video_ids]
+    return ordered_results
 
 def extract_video_id(video_link):
     match = re.search(r'v=([^&]+)', video_link)
@@ -104,7 +132,7 @@ def fetch_and_save_youtube_category_mapping(api_key: str, region_code: str = 'US
         return category_mapping
 
 
-def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_path: str, n: int = 10, year_filter: int = None):
+def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_path: str, n: int = 500, year_filter: int = None):
     pipeline_state = YoutubeDataPipelineState()
 
     if not pipeline_state.is_keep_running():
@@ -164,12 +192,31 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
 
     links_to_process = df.head(n)
 
+    if len(links_to_process) == 0:
+        pipeline_state.set_processing(False)
+        pipeline_state.set_keep_running(False)
+        return
+
     previous_cache_len = len(cache)
 
-    for idx, link in tqdm(zip(links_to_process.index, links_to_process['video_link']), total=len(links_to_process), desc="Fetching metadata"):
-        video_id = extract_video_id(link)
-        if video_id:
-            metadata = fetch_video_metadata(video_id, youtube_api_key, cache)
+    batch_size = 50
+    for start_idx in tqdm(range(0, len(links_to_process), batch_size), desc="Fetching metadata"):
+        end_idx = min(start_idx + batch_size, len(links_to_process))
+        batch_links = links_to_process.iloc[start_idx:end_idx]
+        
+        video_ids = [extract_video_id(link) for link in batch_links['video_link']]
+        valid_video_ids = [vid for vid in video_ids if vid]
+
+        # Fetch metadata for the batch of video IDs
+        batch_metadata = fetch_video_metadata(valid_video_ids, youtube_api_key, cache)
+
+        for idx, video_id, metadata in zip(batch_links.index, video_ids, batch_metadata):
+            if not video_id:
+                durations.append((idx, None))
+                categories.append((idx, None))
+                errors.append((idx, metadata))
+                continue
+
             if isinstance(metadata, str):
                 errors.append((idx, metadata))
             else:
@@ -183,10 +230,6 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
                     category_id = metadata['snippet']['categoryId']
                 durations.append((idx, duration_seconds))
                 categories.append((idx, category_id))
-        else:
-            durations.append((idx, None))
-            categories.append((idx, None))
-            errors.append((idx, "Video ID not found"))
 
 
     # Save cache only if it grows
@@ -196,10 +239,9 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
 
     mapping = fetch_and_save_youtube_category_mapping(youtube_api_key)
 
-
     # Create or reset the columns
-    links_to_process['duration_seconds'] = None
-    links_to_process['category_id'] = None
+    links_to_process.loc[:, 'duration_seconds'] = None
+    links_to_process.loc[:, 'category_id'] = None
 
     # Apply extracted values back to DataFrame
     for idx, dur in durations:
@@ -211,9 +253,10 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
     for idx, err in errors:
         links_to_process.at[idx, 'error'] = err
 
-    links_to_process['category_name'] = links_to_process['category_id'].map(mapping)
+    links_to_process.loc[:, 'category_name'] = links_to_process['category_id'].map(mapping)
 
     # Load the enriched data
+    proccessed_rows = len(links_to_process)
     if os.path.exists(enriched_data_path):
         enriched_df = pd.read_csv(enriched_data_path)
         print("current length of enriched_df", len(enriched_df))
@@ -227,4 +270,4 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
     # Save the enriched file
     links_to_process.to_csv(enriched_data_path, index=False)
 
-    print(f"✅ Done! Enriched file saved as {enriched_data_path}")
+    print(f"✅ Enriched {proccessed_rows} rows. Updated file {enriched_data_path}")
