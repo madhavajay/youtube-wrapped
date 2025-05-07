@@ -54,6 +54,21 @@
             font-size: 16px;
         }
 
+        .file-info {
+            color: #666;
+            font-size: 14px;
+            font-style: italic;
+            margin-top: 4px;
+        }
+
+        .file-stats {
+            margin-left: auto;
+            margin-right: 15px;
+            font-size: 14px;
+            color: #555;
+            text-align: right;
+        }
+
         .action-btn {
             background-color: #FF0000;
             color: white;
@@ -64,6 +79,9 @@
             font-size: 14px;
             margin-left: 10px;
             cursor: pointer;
+            min-width: 85px;
+            text-align: center;
+            display: inline-block;
         }
 
         .action-btn:hover {
@@ -76,6 +94,24 @@
             cursor: not-allowed;
             pointer-events: none;
         }
+
+        .spinner {
+            display: inline-block;
+            width: 5px;
+            margin-top: 2px;
+            height: 5px;
+            margin-right: 5px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
@@ -84,20 +120,56 @@
         <h1>YouTube Wrapped</h1>
 
         <div class="checklist-item">
-            <div class="status {% if step_1_download %}complete{% else %}pending{% endif %}">
-                {% if step_1_download %}✓{% else %}?{% endif %}
+            <div class="status {% if source_data_exists %}complete{% else %}pending{% endif %}">
+                {% if source_data_exists %}✓{% else %}?{% endif %}
             </div>
-            <div class="description">Fetch YouTube Data</div>
+            <div class="description">
+                Fetch YouTube Data
+                {% if watch_history_csv_path %}
+                <div class="file-info">{{ watch_history_csv_path }}</div>
+                {% endif %}
+            </div>
+            <div class="file-stats">
+                {% if watch_history_file_size_mb %}
+                {{ watch_history_file_size_mb | round }} MB
+                {% endif %}
+                {% if total_rows %}
+                <div>Total Rows: {{ total_rows }}</div>
+                {% endif %}
+            </div>
             <a href="/download" class="action-btn">Upload</a>
         </div>
 
         <div class="checklist-item">
             <div
-                class="status {% if setup_api_key %}complete{% elif not step_1_download %}disabled{% else %}pending{% endif %}">
+                class="status {% if setup_api_key %}complete{% elif not source_data_exists %}disabled{% else %}pending{% endif %}">
                 {% if setup_api_key %}✓{% else %}?{% endif %}
             </div>
             <div class="description">Setup YouTube API</div>
-            <a href="/api" class="action-btn {% if not step_1_download %}disabled{% endif %}">Configure</a>
+            <a href="/api" class="action-btn {% if not source_data_exists %}disabled{% endif %}">Configure</a>
+        </div>
+
+        <div class="checklist-item">
+            <div class="status {% if source_data_exists and setup_api_key %}pending{% else %}disabled{% endif %}">
+                {% if source_data_exists and setup_api_key %}?{% else %}✗{% endif %}
+            </div>
+            <div class="description">Processing
+                {% if enriched_data_path %}
+                <div class="file-info">{{ enriched_data_path }}</div>
+                {% endif %}
+            </div>
+            <div class="file-stats" id="processing-stats">
+                {{ processed_rows }}/{{ total_rows }}
+            </div>
+            <a href="javascript:void(0)" id="process-btn"
+                class="action-btn {% if not (source_data_exists and setup_api_key) %}disabled{% endif %}"
+                onclick="toggleProcessing()">
+                {% if is_processing %}
+                <span class="spinner"></span>Processing
+                {% else %}
+                Process
+                {% endif %}
+            </a>
         </div>
 
         <div class="checklist-item">
@@ -118,6 +190,110 @@
             <a href="/publish" class="action-btn {% if not step_3_summarize %}disabled{% endif %}">Publish</a>
         </div>
     </div>
+
+    <script>
+        // Function to start or cancel processing
+        function toggleProcessing() {
+            const processBtn = document.getElementById('process-btn');
+            const processingStats = document.getElementById('processing-stats');
+
+            // Check if button is not disabled
+            if (!processBtn.classList.contains('disabled')) {
+                if (processBtn.innerHTML.includes('Cancel')) {
+                    // If currently showing cancel, change to process without spinner
+                    processBtn.innerHTML = 'Process';
+
+                    // Send AJAX request to stop processing
+                    fetch('/stop-processing', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                console.log('Processing cancelled successfully');
+                                stopPolling();
+                            } else {
+                                console.error('Failed to cancel processing');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                } else {
+                    // Update button to show cancel state with spinner
+                    processBtn.innerHTML = '<span class="spinner"></span>Cancel';
+
+                    // Start AJAX polling
+                    startPolling();
+
+                    // Send AJAX request to start processing
+                    fetch('/start-processing', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                console.log('Processing started successfully');
+                            } else {
+                                console.error('Failed to start processing');
+                                processBtn.innerHTML = 'Process';
+                                stopPolling();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            processBtn.innerHTML = 'Process';
+                            stopPolling();
+                        });
+                }
+            }
+        }
+
+        let pollingInterval;
+
+        // Function to start polling for updates
+        function startPolling() {
+            // Poll every 3 seconds
+            pollingInterval = setInterval(checkProcessingStatus, 3000);
+        }
+
+        // Function to stop polling
+        function stopPolling() {
+            clearInterval(pollingInterval);
+        }
+
+        // Function to check processing status
+        function checkProcessingStatus() {
+            fetch('/processing-status')
+                .then(response => response.json())
+                .then(data => {
+                    const processingStats = document.getElementById('processing-stats');
+                    processingStats.textContent = `${data.processed_rows}/${data.total_rows}`;
+
+                    // If processing is complete
+                    if (data.is_complete) {
+                        const processBtn = document.getElementById('process-btn');
+                        processBtn.innerHTML = 'Complete';
+                        processBtn.classList.add('disabled');
+                        stopPolling();
+
+                        // Refresh the page after a short delay to update all status indicators
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                });
+        }
+    </script>
 </body>
 
 </html>

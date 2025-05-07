@@ -3,4 +3,5 @@
 rm -rf .venv
 uv venv -p 3.12
 uv pip install -r requirements.txt
+uv pip install -r requirements-dev.txt
 uv run main.py
