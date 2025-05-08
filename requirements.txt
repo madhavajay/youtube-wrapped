@@ -10,3 +10,4 @@ jinja2
 python-multipart
 syft-core
 pillow
+dataparser

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import dateparser
 from fastapi import BackgroundTasks
 import shutil
 import os
@@ -238,6 +239,7 @@ async def ui_download(request: Request):
 
 @app.post("/upload", include_in_schema=False)
 async def upload_watch_history(request: Request):
+    print("Debug: Starting upload_watch_history function.")
     form = await request.form()
     file: UploadFile = form.get("file-input")
 
@@ -250,11 +252,13 @@ async def upload_watch_history(request: Request):
     print(f"Debug: Uploaded file size: {len(contents)} bytes")
 
     if len(contents) == 0:
+        print("Debug: Uploaded file is empty.")
         return HTMLResponse("Uploaded file is empty.", status_code=400)
 
     upload_path = current_dir / "data" / "watch-history.html"
     with open(upload_path, "wb") as f:
         f.write(contents)
+    print(f"Debug: File written to {upload_path}")
 
     import re
     import pandas as pd
@@ -267,8 +271,6 @@ async def upload_watch_history(request: Request):
 
     # Find all "outer-cell" blocks quickly without full DOM parsing
     entries = re.findall(r'<div class="outer-cell[\s\S]*?<\/div>\s*<\/div>', html)
-
-    print(f"Debug: Found {len(entries)} entries in the HTML file.")
 
     data = []
 
@@ -288,14 +290,27 @@ async def upload_watch_history(request: Request):
 
         # Extract all links
         links = re.findall(r'<a href="(.*?)">(.*?)<\/a>', watched_section)
-        # Extract timestamps
-        time_match = re.search(r'(\d{1,2} \w+ \d{4}, \d{2}:\d{2}:\d{2} [A-Z]+)', watched_section)
+        # Step 1: Parse HTML
+        text_blocks = [line.strip() for line in re.split(r'<[^>]+>', watched_section) if line.strip()]
+        text_blocks = [text_blocks[-1]]
+        # Step 2: Try parsing each line for a datetime
+        watch_time = None
+        for line in reversed(text_blocks):  # Start from end=
+            try:
+                dt = dateparser.parse(line)
+                watch_time = dt.isoformat()
+                break  # Stop at first successful parse from the end
+            except Exception:
+                continue
+
+        if not watch_time:
+            print(f"❌ No valid datetime found in watched_section {watched_section}")
+            continue
 
         # --- CASE 1: Full record with video and channel
-        if len(links) >= 2 and time_match:
+        if len(links) >= 2 and watch_time:
             video_link, video_name = links[0]
             channel_link, channel_name = links[1]
-            watch_time = time_match.group(1)
 
             video_name_unescaped = ihtml.unescape(video_name.strip())
             channel_name_unescaped = ihtml.unescape(channel_name.strip())
@@ -311,14 +326,31 @@ async def upload_watch_history(request: Request):
                 'channel_link': channel_link.strip(),
                 'watch_time': watch_time.strip()
             })
+            continue
 
         # --- CASE 2: Minimal record with only video
-        elif len(links) == 1 and time_match:
-            # no channel means the video is no longer available
+        if len(links) >= 1 and watch_time:
+            video_link, video_name = links[0]
+
+            video_name_unescaped = ihtml.unescape(video_name.strip())
+
+            # Fallback: if name is same as link, use video ID as name
+            if video_name_unescaped.strip() == video_link.strip():
+                # from urllib.parse import urlparse, parse_qs
+                # qs = parse_qs(urlparse(video_link).query)
+                # video_name_unescaped = qs.get("v", [video_link])[-1]  # use video ID
+                video_name_unescaped = ""
+
+            data.append({
+                'video_name': video_name_unescaped,
+                'video_link': video_link.strip(),
+                'channel_name': '',  # not available
+                'channel_link': '',  # not available
+                'watch_time': watch_time.strip()
+            })
             continue
 
         else:
-            # No usable record found, skip
             continue
 
     # Create DataFrame
@@ -326,8 +358,8 @@ async def upload_watch_history(request: Request):
 
     # Save to CSV
     df.to_csv('data/watch-history.csv', index=False)
-
     print(f"Debug: Extracted {len(df)} entries and saved to watch-history.csv")
+    
     return RedirectResponse(url="/", status_code=303)
 
 

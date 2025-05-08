@@ -173,6 +173,10 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
     durations = []
     categories = []
     errors = []
+    channel_names = []
+    channel_links = []
+    video_names = []
+    
     if 'duration_seconds' not in df.columns:
         df['duration_seconds'] = None
     if 'category_id' not in df.columns:
@@ -215,10 +219,16 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
                 durations.append((idx, None))
                 categories.append((idx, None))
                 errors.append((idx, metadata))
+                channel_names.append((idx, None))
+                channel_links.append((idx, None))
+                video_names.append((idx, None))
                 continue
 
             if isinstance(metadata, str):
                 errors.append((idx, metadata))
+                channel_names.append((idx, None))
+                channel_links.append((idx, None))
+                video_names.append((idx, None))
             else:
                 errors.append((idx, None))
                 # Extract duration
@@ -228,11 +238,25 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
                 category_id = None
                 if metadata and 'snippet' in metadata and 'categoryId' in metadata['snippet']:
                     category_id = metadata['snippet']['categoryId']
+                
+                # Extract channel name and link
+                channel_name = None
+                channel_link = None
+                if metadata and 'snippet' in metadata:
+                    channel_name = metadata['snippet'].get('channelTitle')
+                    channel_link = f"https://www.youtube.com/channel/{metadata['snippet'].get('channelId')}"
+                
+                # Extract video name
+                video_name = None
+                if metadata and 'snippet' in metadata:
+                    video_name = metadata['snippet'].get('title')
+
                 durations.append((idx, duration_seconds))
                 categories.append((idx, category_id))
+                channel_names.append((idx, channel_name))
+                channel_links.append((idx, channel_link))
+                video_names.append((idx, video_name))
 
-
-    # Save cache only if it grows
     if len(cache) > previous_cache_len:
         save_metadata_cache(cache)
         previous_cache_len = len(cache)
@@ -252,6 +276,15 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
 
     for idx, err in errors:
         links_to_process.at[idx, 'error'] = err
+
+    for idx, channel_name in channel_names:
+        links_to_process.at[idx, 'channel_name'] = channel_name
+
+    for idx, channel_link in channel_links:
+        links_to_process.at[idx, 'channel_link'] = channel_link
+
+    for idx, video_name in video_names:
+        links_to_process.at[idx, 'video_name'] = video_name
 
     links_to_process.loc[:, 'category_name'] = links_to_process['category_id'].map(mapping)
 
