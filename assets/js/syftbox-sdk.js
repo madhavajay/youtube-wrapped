@@ -264,7 +264,19 @@
         const syftToken = localStorage.getItem("syft_token");
         console.debug("Syft Token:", syftToken);
 
-        if (!syftToken) {
+        const response = await fetch(
+          `${LOCALHOST_URL}v1/app/list`,
+          {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${syftToken}`,
+              "Accept": "application/json"
+            }
+          }
+        );
+
+        const data = await response.json();
+        if (response.status === 401) {
           console.error("No token found, please login.");
           this.renderBadge(
             "login",
@@ -281,18 +293,6 @@
           return;
         }
 
-        const response = await fetch(
-          `${LOCALHOST_URL}v1/app/list`,
-          {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${syftToken}`,
-              "Accept": "application/json"
-            }
-          }
-        );
-
-        const data = await response.json();
         if (response.ok && data.apps && data.apps.includes(apiName)) {
           this.renderBadge(
             "installed",
@@ -300,7 +300,7 @@
             apiName,
             version,
             () => window.open(source, "_blank"),
-            iconUrl
+            SYFTBOX_ICON_URL
           );
         } else if (response.ok) {
           this.renderBadge(
@@ -309,7 +309,7 @@
             apiName,
             version,
             () => this.installAPI(apiName, source, version, iconUrl),
-            iconUrl
+            SYFTBOX_ICON_URL
           );
         } else {
           console.error("Error response received, please install SyftBox.");
@@ -346,8 +346,7 @@
       const container = document.getElementById("syftbox-api-badge");
       const isInteractive = status !== "checking";
 
-      const defaultIcon =
-        "https://raw.githubusercontent.com/OpenMined/ftop/refs/heads/main/icon.png";
+      const defaultIcon = SYFTBOX_ICON_URL;
       const finalIconUrl = iconUrl || defaultIcon;
 
       container.innerHTML = `
@@ -374,9 +373,7 @@
       const originalContent = button.innerHTML;
       button.disabled = true;
 
-      const defaultIcon =
-        "https://raw.githubusercontent.com/OpenMined/ftop/refs/heads/main/icon.png";
-      const finalIconUrl = iconUrl || defaultIcon;
+      const finalIconUrl = SYFTBOX_ICON_URL;
 
       button.innerHTML = `
           <img src="${finalIconUrl}" alt="API icon" class="loading-icon">
