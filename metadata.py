@@ -302,9 +302,10 @@ def process_rows(client, youtube_api_key: str, watch_history_path: str, enriched
         links_to_process = combined_df
 
     # Save the enriched file
-    private_path = f"syft://{client.email}/private/youtube-wrapped/watch-history-enriched.csv"
+    syft_uri = f"syft://{client.email}/private/youtube-wrapped/watch-history-enriched.csv"
+    private_path = enriched_data_path
     schema_name = "com.madhavajay.youtube-wrapped.watch-history-enriched:1.0.0"
-    add_dataset(client, "watch-history-enriched-csv", private_path, schema_name)
+    add_dataset(client, "watch-history-enriched-csv", syft_uri, private_path, schema_name)
 
     links_to_process.to_csv(enriched_data_path, index=False)
 

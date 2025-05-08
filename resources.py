@@ -46,7 +46,7 @@ def ensure_syft_yaml(client):
             file.write('---\n')  # Add the YAML document start marker
             yaml.dump(datasets_data, file, default_flow_style=False)
 
-def add_dataset(client, dataset_name, dataset_path, schema_name):
+def add_dataset(client, dataset_name, syft_uri, private_path, schema_name):
     schema = load_schema(schema_name)
     schemas_path = client.datasite_path / "public" / "resources" / "schemas"
     client.makedirs(schemas_path)
@@ -79,7 +79,7 @@ def add_dataset(client, dataset_name, dataset_path, schema_name):
     # Add or update the dataset in the resources
     new_resource = {
         'name': dataset_name,
-        'path': str(dataset_path),
+        'path': str(syft_uri),
         'schema': schema_name,
         'schema_ref': f"./resources/schemas/{schema_name.replace(':', '_')}.yaml"
     }
@@ -98,6 +98,26 @@ def add_dataset(client, dataset_name, dataset_path, schema_name):
         file.write('---\n')  # Add the YAML document start marker
         yaml.dump(datasets_data, file, default_flow_style=False)
 
+    mapping_file_path = Path.home() / ".syftbox" / "mapping.yaml"
+    
+    # Ensure the parent directory exists
+    if not mapping_file_path.parent.exists():
+        mapping_file_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    mapping_data = {}
+
+    # Check if the mapping file exists and load its content
+    if mapping_file_path.exists():
+        with mapping_file_path.open('r') as file:
+            mapping_data = yaml.safe_load(file) or {}
+
+    # Update the mapping data with the new syft_uri and private_path
+    mapping_data[syft_uri] = str(private_path)
+
+    # Write the updated mapping data back to the file with the YAML document start marker
+    with mapping_file_path.open('w') as file:
+        file.write('---\n')  # Add the YAML document start marker
+        yaml.dump(mapping_data, file, default_flow_style=False)
 
 def load_schema(schema_name):
     current_dir = Path(__file__).parent

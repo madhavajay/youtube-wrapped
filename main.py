@@ -264,9 +264,10 @@ async def upload_watch_history(request: Request):
         f.write(contents)
     print(f"Debug: File written to {upload_path}")
 
-    private_path = f"syft://{client.email}/private/youtube-wrapped/watch-history.html"
+    syft_uri = f"syft://{client.email}/private/youtube-wrapped/watch-history.html"
+    private_path = upload_path
     schema_name = "com.google.takeout.youtube.watch-history:1.0.0"
-    add_dataset(client, "watch-history-raw-html", private_path, schema_name)
+    add_dataset(client, "watch-history-raw-html", syft_uri, private_path, schema_name)
 
     import re
     import pandas as pd
@@ -367,9 +368,10 @@ async def upload_watch_history(request: Request):
     # Save to CSV
     df.to_csv('data/watch-history.csv', index=False)
 
-    private_path = f"syft://{client.email}/private/youtube-wrapped/watch-history.csv"
+    syft_uri = f"syft://{client.email}/private/youtube-wrapped/watch-history.csv"
+    private_path = current_dir / "data" / "watch-history.csv"
     schema_name = "com.madhavajay.youtube-wrapped.watch-history-raw:1.0.0"
-    add_dataset(client, "watch-history-raw-csv", private_path, schema_name)
+    add_dataset(client, "watch-history-raw-csv", syft_uri,private_path, schema_name)
 
     print(f"Debug: Extracted {len(df)} entries and saved to watch-history.csv")
     
