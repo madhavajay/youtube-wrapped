@@ -78,7 +78,7 @@ def create_share_image(year, output_path):
     draw.rectangle([(592, 0), (600, 600)], fill=(255, 0, 0))
 
     # Step 4: Add header
-    draw.text((40, 40), "Youtube Wrapped", font=title_font, fill=(255, 0, 0))
+    draw.text((40, 40), "YouTube Wrapped", font=title_font, fill=(255, 0, 0))
     draw.text((40, 100), year, font=year_font, fill=(255, 0, 0))
 
     # Step 5: Add stats
