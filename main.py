@@ -50,6 +50,7 @@ current_dir = Path(__file__).parent
 
 # Serve static files from the assets/images directory
 app.mount("/images", StaticFiles(directory=current_dir / "assets" / "images"), name="images")
+app.mount("/js", StaticFiles(directory=current_dir / "assets" / "js"), name="js")
 
 
 async def async_run_box():
@@ -397,7 +398,7 @@ async def unpublish(year: int | str):
 
 def get_assigned_port():
     import os
-    return int(os.getenv("ASSIGNED_PORT", 8080))
+    return int(os.getenv("SYFTBOX_ASSIGNED_PORT", 8080))
 
 
 async def main():

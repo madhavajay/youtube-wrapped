@@ -267,6 +267,8 @@ def create_wrapped_page(year: int | str, client):
 
     template = Template(template_html)
 
+    clean_name = client.email.replace("@", "[at]")
+
     # Render the final HTML
     rendered_html = template.render(
         year=data["year"],
@@ -281,6 +283,8 @@ def create_wrapped_page(year: int | str, client):
         category_names=data["top_categories"],
         total_days=data["total_days"],
         wrapped_url = f"https://syftboxdev.openmined.org/datasites/{client.email}/public/youtube-wrapped/",
+        email=client.email,
+        clean_name=clean_name,
     )
 
     # Write to output file

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Wrapped {{ year }}</title>
+    <title>YouTube Wrapped {{ year }} for {{ clean_name }}</title>
     <meta property="og:url" content="{{ wrapped_url }}">
     <meta property="og:title" content="YouTube Wrapped {{ year }}">
     <meta property="og:description" content="Check out my YouTube stats for {{ year }}!">
@@ -203,7 +203,8 @@
     <link rel="preload" as="image"
         href="https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/mwsyftbox_white_off.png">
     <script defer src="https://static.addtoany.com/menu/page.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/madhavajay/youtube-wrapped/assets/syftbox-sdk.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/gh/madhavajay/youtube-wrapped/assets/js/syftbox-sdk.js"></script> -->
+    <script src="/js/syftbox-sdk.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             await APIBadge.initialized;
@@ -222,7 +223,8 @@
             </a>
         </div>
         <header>
-            <h1>Your {{ year }} Wrapped</h1>
+            <h1>YouTube Wrapped {{ year }}</h1>
+            <strong>for {{ email }}</strong>
             <p class="subtitle">Your YouTube journey this year in numbers</p>
         </header>
 
@@ -310,6 +312,24 @@
 
 
     </div>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CSF05C6SEP"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-CSF05C6SEP');
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KSKVJCX560"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-KSKVJCX560');
+    </script>
 </body>
 
 </html>

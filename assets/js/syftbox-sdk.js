@@ -1,5 +1,24 @@
 // syftbox-sdk.js
 (function () {
+  const LOCALHOST_URL = "http://localhost:7938/";
+  const INSTALL_URL = "https://syftbox.openmined.org/";
+
+  // Function to extract token from URL hash and store it in localStorage
+  function extractTokenFromUrl() {
+    const hash = window.location.hash;
+    const tokenMatch = hash.match(/#token=([a-zA-Z0-9]+)/);
+    if (tokenMatch) {
+      const token = tokenMatch[1];
+      localStorage.setItem("syft_token", token);
+      console.log("Extracted Token:", token);
+    } else {
+      console.log("No token found in URL hash.");
+    }
+  }
+
+  // Extract token from URL on page load
+  extractTokenFromUrl();
+
   function getGitHubRawUrl(githubUrl) {
     return (
       githubUrl
@@ -241,24 +260,39 @@
       );
 
       try {
-        const response = await fetch(
-          `http://localhost:8080/apps/status/${apiName}`
-        );
+        const syftToken = localStorage.getItem("syft_token");
+        console.debug("Syft Token:", syftToken);
 
-        if (response.status === 404) {
+        if (!syftToken) {
+          console.error("No token found, please login.");
           this.renderBadge(
-            "install",
-            "Install",
-            apiName,
-            version,
-            () => this.installAPI(source, version, iconUrl),
+            "login",
+            "Login",
+            "",
+            "",
+            () => {
+              const redirect_url = window.location.href;
+              const syft_url = `syft://controlplane/get_token?redirect=${encodeURIComponent(redirect_url)}`;
+              window.open(syft_url, "_blank");
+            },
             iconUrl
           );
           return;
         }
 
+        const response = await fetch(
+          `${LOCALHOST_URL}v1/app/list`,
+          {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${syftToken}`,
+              "Accept": "application/json"
+            }
+          }
+        );
+
         const data = await response.json();
-        if (data.version === version) {
+        if (response.ok && data.apps && data.apps.includes(apiName)) {
           this.renderBadge(
             "installed",
             "Installed",
@@ -267,13 +301,23 @@
             () => window.open(source, "_blank"),
             iconUrl
           );
-        } else {
+        } else if (response.ok) {
           this.renderBadge(
-            "update",
-            "Update",
+            "install",
+            "Install",
             apiName,
             version,
-            () => this.installAPI(source, version, iconUrl),
+            () => this.installAPI(apiName, source, version, iconUrl),
+            iconUrl
+          );
+        } else {
+          console.error("Error response received, please install SyftBox.");
+          this.renderBadge(
+            "install-syftbox",
+            "Install SyftBox",
+            "",
+            "",
+            () => window.open(INSTALL_URL, "_blank"),
             iconUrl
           );
         }
@@ -284,7 +328,7 @@
           "Install SyftBox",
           "",
           "",
-          () => window.open("https://syftbox.openmined.org/", "_blank"),
+          () => window.open(INSTALL_URL, "_blank"),
           iconUrl
         );
       }
@@ -324,7 +368,7 @@
       }
     },
 
-    async installAPI(source, version, iconUrl = null) {
+    async installAPI(apiName, source, version, iconUrl = null) {
       const button = document.querySelector(".api-badge");
       const originalContent = button.innerHTML;
       button.disabled = true;
@@ -341,16 +385,26 @@
       `;
 
       try {
-        const response = await fetch("http://localhost:8080/apps/install", {
+        const syftToken = localStorage.getItem("syft_token"); // Retrieve syftToken from localStorage
+        const requestBody = {
+          branch: "main",
+          force: true,
+          repoURL: source // Use source as repoURL
+        };
+
+        console.log("Request Body:", requestBody);
+
+        const response = await fetch(`${LOCALHOST_URL}v1/app/install`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${syftToken}` // Include syftToken in headers
           },
-          body: JSON.stringify({ source, version }),
+          body: JSON.stringify(requestBody),
         });
 
         if (response.status === 200) {
-          this.show("app", version, source, iconUrl);
+          this.show(apiName, version, source, iconUrl);
         } else {
           throw new Error("Installation failed");
         }
