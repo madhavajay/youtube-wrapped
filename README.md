@@ -45,7 +45,7 @@ To get started with `youtube-wrapped`, follow these steps:
    ```
 
 3. **Load the UI**:  
-   After installing the `youtube-wrapped` app, you can load the user interface by navigating to `http://localhost:8080` in your web browser. This will allow you to interact with the app and explore its features.
+   After installing the `youtube-wrapped` app, you can load the user interface by clicking <a href="http://localhost:8080" target="_blank">http://localhost:8080</a> in your web browser. This will allow you to interact with the app and explore its features.
 
    <img src="assets/images/example-ui.png" alt="Example UI" width="500px">
 
