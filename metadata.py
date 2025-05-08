@@ -12,6 +12,7 @@ import isodate
 import tzlocal
 from tqdm import tqdm
 from utils import YoutubeDataPipelineState
+from resources import add_dataset, load_schema
 
 
 METADATA_FILE = 'cache/youtube_metadata.json'
@@ -132,7 +133,7 @@ def fetch_and_save_youtube_category_mapping(api_key: str, region_code: str = 'US
         return category_mapping
 
 
-def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_path: str, n: int = 500, year_filter: int = None):
+def process_rows(client, youtube_api_key: str, watch_history_path: str, enriched_data_path: str, n: int = 500, year_filter: int = None):
     pipeline_state = YoutubeDataPipelineState()
 
     if not pipeline_state.is_keep_running():
@@ -301,6 +302,10 @@ def process_rows(youtube_api_key: str, watch_history_path: str, enriched_data_pa
         links_to_process = combined_df
 
     # Save the enriched file
+    private_path = f"syft://{client.email}/private/youtube-wrapped/watch-history-enriched.csv"
+    schema_name = "com.madhavajay.youtube-wrapped.watch-history-enriched:1.0.0"
+    add_dataset(client, "watch-history-enriched-csv", private_path, schema_name)
+
     links_to_process.to_csv(enriched_data_path, index=False)
 
     print(f"✅ Enriched {proccessed_rows} rows. Updated file {enriched_data_path}")

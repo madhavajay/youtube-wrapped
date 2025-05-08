@@ -1,4 +1,5 @@
 from __future__ import annotations
+import yaml
 import dateparser
 from fastapi import BackgroundTasks
 import shutil
@@ -23,6 +24,7 @@ import jinja2
 from syft_core import Client as SyftboxClient
 from syft_core import SyftClientConfig
 from utils import YoutubeDataPipelineState
+from resources import ensure_syft_yaml, add_dataset, load_schema
 
 box = SyftEvents("youtube-wrapped")
 
@@ -35,6 +37,7 @@ client.makedirs(wrapped_path)
 data_dir = Path("./data")
 data_dir.mkdir(parents=True, exist_ok=True)
 
+ensure_syft_yaml(client)
 
 # @box.on_request("/ping")
 # def ping_handler(ping: PingRequest) -> PongResponse:
@@ -165,6 +168,7 @@ async def start_processing(request: Request, background_tasks: BackgroundTasks):
                 
         try:
             process_rows(
+                client=client,
                 youtube_api_key=youtube_api_token,
                 watch_history_path=pipeline_state.get_watch_history_csv_path(),
                 enriched_data_path=pipeline_state.get_enriched_data_path()
@@ -259,6 +263,10 @@ async def upload_watch_history(request: Request):
     with open(upload_path, "wb") as f:
         f.write(contents)
     print(f"Debug: File written to {upload_path}")
+
+    private_path = f"syft://{client.email}/private/youtube-wrapped/watch-history.html"
+    schema_name = "com.google.takeout.youtube.watch-history:1.0.0"
+    add_dataset(client, "watch-history-raw-html", private_path, schema_name)
 
     import re
     import pandas as pd
@@ -358,6 +366,11 @@ async def upload_watch_history(request: Request):
 
     # Save to CSV
     df.to_csv('data/watch-history.csv', index=False)
+
+    private_path = f"syft://{client.email}/private/youtube-wrapped/watch-history.csv"
+    schema_name = "com.madhavajay.youtube-wrapped.watch-history-raw:1.0.0"
+    add_dataset(client, "watch-history-raw-csv", private_path, schema_name)
+
     print(f"Debug: Extracted {len(df)} entries and saved to watch-history.csv")
     
     return RedirectResponse(url="/", status_code=303)

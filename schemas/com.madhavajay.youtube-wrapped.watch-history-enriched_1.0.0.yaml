@@ -1,0 +1,37 @@
+---
+description: Parsed CSV with basic YouTube video metadata
+fields:
+- example: Learn To Talk - Toddler Learning Video - Learn Colors with Crayon Surprises
+    - Speech Delay - Baby
+  name: video_name
+  type: string
+- example: https://www.youtube.com/watch?v=XtHZ_8ILGgY
+  name: video_link
+  type: url
+- example: Ms Rachel - Toddler Learning Videos
+  name: channel_name
+  type: string
+- example: https://www.youtube.com/channel/UCG2CL6EUjG8TVT1Tpl9nJdg
+  name: channel_link
+  type: url
+- example: '2025-05-06T08:58:48+10:00'
+  format: iso8601
+  name: watch_time
+  type: datetime
+- example: '2025-05-07T16:51:34+10:00'
+  format: iso8601
+  name: watch_time_dt
+  type: datetime
+- example: 3304
+  name: duration_seconds
+  type: integer
+- example: 27
+  name: category_id
+  type: integer
+- example: Education
+  name: category_name
+  type: string
+- example: ''
+  name: error
+  type: string
+format: csv
