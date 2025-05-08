@@ -7,14 +7,18 @@ home: https://syftboxdev.openmined.org/datasites/madhava@openmined.org/youtube-w
 icon: https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/icon.png
 ---
 
-<h1 align="left">🎬 YouTube Wrapped</h1>
-<a href="https://github.com/OpenMined/syftbox">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/images/mwsyftbox_white_on.png">
-    <img alt="Logo" src="assets/images/mwsyftbox_black_on.png" width="200px" align="right" />
-  </picture>
-</a>
-<h2>Your Watch History, Your Insights, Your Data.</h2>
+<div style="display: flex; align-items: center; justify-content: space-between;">
+  <div>
+    <h1>🎬 YouTube Wrapped</h1>
+    <h2>Your Watch History, Your Insights, Your Data.</h2>
+  </div>
+  <a href="https://github.com/OpenMined/syftbox" style="flex-shrink: 0;">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/images/mwsyftbox_white_on.png">
+      <img alt="Logo" src="assets/images/mwsyftbox_black_on.png" width="200px" />
+    </picture>
+  </a>
+</div>
 
 Tired of platforms hoarding your viewing habits without giving anything back? YouTube Wrapped is like Spotify Wrapped—but for YouTube, and fully under your control.
 
@@ -25,6 +29,11 @@ Then, compare your wrapped with friends to see who’s binging what. Want more? 
 <h4>Tell me you're a parent, without telling me you're a parent</h4>
 <img src="assets/images/youtube-wrapped-2024.png" alt="youtube-wrapped" width="300px">
 
+## What is SyftBox?
+
+SyftBox is a new platform for building privacy-preserving applications and experiences that work over the internet without uploading your data. Instead of sending your data to a server, SyftBox lets you run powerful AI and analytics locally or in trusted environments, so your personal information stays private and secure.
+
+[read more here](https://github.com/OpenMined/syftbox)
 
 
 ## Installation Steps
