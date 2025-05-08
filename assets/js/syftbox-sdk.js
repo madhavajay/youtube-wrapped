@@ -2,6 +2,7 @@
 (function () {
   const LOCALHOST_URL = "http://localhost:7938/";
   const INSTALL_URL = "https://syftbox.openmined.org/";
+  const SYFTBOX_ICON_URL = "https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/syftbox_icon.png";
 
   // Function to extract token from URL hash and store it in localStorage
   function extractTokenFromUrl() {
@@ -256,7 +257,7 @@
         apiName,
         version,
         null,
-        iconUrl
+        SYFTBOX_ICON_URL
       );
 
       try {
@@ -275,7 +276,7 @@
               const syft_url = `syft://controlplane/get_token?redirect=${encodeURIComponent(redirect_url)}`;
               window.open(syft_url, "_blank");
             },
-            iconUrl
+            SYFTBOX_ICON_URL
           );
           return;
         }
@@ -318,7 +319,7 @@
             "",
             "",
             () => window.open(INSTALL_URL, "_blank"),
-            iconUrl
+            SYFTBOX_ICON_URL
           );
         }
       } catch (error) {
@@ -329,7 +330,7 @@
           "",
           "",
           () => window.open(INSTALL_URL, "_blank"),
-          iconUrl
+          SYFTBOX_ICON_URL
         );
       }
     },
