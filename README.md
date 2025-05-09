@@ -23,7 +23,7 @@ Just drop in your exported YouTube history and get a beautiful, private summary 
 Then, compare your wrapped with friends to see who’s binging what. Want more? Get personalized recommendations powered by open-source AI, based on your actual taste—not what the algorithm wants you to watch.
 
 <h4>Tell me you're a parent, without telling me you're a parent</h4>
-<img src="assets/images/youtube-wrapped-2024.png" alt="youtube-wrapped" width="300px">
+<img src="assets/images/youtube-wrapped-2024.png" alt="youtube-wrapped" width="400px">
 
 ## What is SyftBox?
 

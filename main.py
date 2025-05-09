@@ -448,6 +448,16 @@ def get_assigned_port():
     return int(os.getenv("SYFTBOX_ASSIGNED_PORT", 8080))
 
 
+@app.get("/launch-takeout-agent", include_in_schema=False)
+async def launch_takeout_agent():
+    from helper import automate_takeout
+    try:
+        await automate_takeout()
+    except Exception as e:
+        logger.error(f"An error occurred while launching the takeout agent: {e}")
+    return RedirectResponse(url="/", status_code=303)
+
+
 async def main():
     task_box = asyncio.create_task(async_run_box())
     config = uvicorn.Config(app=app, host="0.0.0.0", port=get_assigned_port(), reload=True)
