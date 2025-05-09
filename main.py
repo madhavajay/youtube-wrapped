@@ -241,29 +241,7 @@ async def ui_download(request: Request):
 
     return HTMLResponse(rendered_content)
 
-@app.post("/upload", include_in_schema=False)
-async def upload_watch_history(request: Request):
-    print("Debug: Starting upload_watch_history function.")
-    form = await request.form()
-    file: UploadFile = form.get("file-input")
-
-    if not file:
-        print("Debug: No file uploaded.")
-        return HTMLResponse("No file uploaded.", status_code=400)
-
-    contents = await file.read()
-    print(f"Debug: Uploaded file name: {file.filename}")
-    print(f"Debug: Uploaded file size: {len(contents)} bytes")
-
-    if len(contents) == 0:
-        print("Debug: Uploaded file is empty.")
-        return HTMLResponse("Uploaded file is empty.", status_code=400)
-
-    upload_path = current_dir / "data" / "watch-history.html"
-    with open(upload_path, "wb") as f:
-        f.write(contents)
-    print(f"Debug: File written to {upload_path}")
-
+async def process_upload(upload_path):
     syft_uri = f"syft://{client.email}/private/youtube-wrapped/watch-history.html"
     private_path = upload_path
     schema_name = "com.google.takeout.youtube.watch-history:1.0.0"
@@ -374,6 +352,31 @@ async def upload_watch_history(request: Request):
     add_dataset(client, "watch-history-raw-csv", syft_uri,private_path, schema_name)
 
     print(f"Debug: Extracted {len(df)} entries and saved to watch-history.csv")
+
+@app.post("/upload", include_in_schema=False)
+async def upload_watch_history(request: Request):
+    print("Debug: Starting upload_watch_history function.")
+    form = await request.form()
+    file: UploadFile = form.get("file-input")
+
+    if not file:
+        print("Debug: No file uploaded.")
+        return HTMLResponse("No file uploaded.", status_code=400)
+
+    contents = await file.read()
+    print(f"Debug: Uploaded file name: {file.filename}")
+    print(f"Debug: Uploaded file size: {len(contents)} bytes")
+
+    if len(contents) == 0:
+        print("Debug: Uploaded file is empty.")
+        return HTMLResponse("Uploaded file is empty.", status_code=400)
+
+    upload_path = current_dir / "data" / "watch-history.html"
+    with open(upload_path, "wb") as f:
+        f.write(contents)
+    print(f"Debug: File written to {upload_path}")
+
+    await process_upload(upload_path)
     
     return RedirectResponse(url="/", status_code=303)
 
@@ -453,6 +456,18 @@ async def launch_takeout_agent():
     from helper import automate_takeout
     try:
         await automate_takeout()
+    except Exception as e:
+        logger.error(f"An error occurred while launching the takeout agent: {e}")
+    return RedirectResponse(url="/download", status_code=303)
+
+@app.get("/launch-gmail-download-agent", include_in_schema=False)
+async def launch_gmail_download_agent():
+    from helper import automate_download_email_link
+    await automate_download_email_link()
+    try:
+        watch_history_path = current_dir / "data" / "watch-history.html"
+        if watch_history_path.exists():
+            await process_upload(watch_history_path)
     except Exception as e:
         logger.error(f"An error occurred while launching the takeout agent: {e}")
     return RedirectResponse(url="/", status_code=303)
