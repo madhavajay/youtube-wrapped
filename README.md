@@ -14,6 +14,16 @@ icon: https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/ma
     <img alt="Logo" src="assets/images/mwsyftbox_black_on.png" width="200px" align="right" />
   </picture>
 </a>
+
+
+## 1-liner Install
+Installs SyftBox + youtube-wrapped on MacOS and Linux:
+```bash
+curl -fsSL https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/install.sh | sh
+```
+
+
+
 <h2>Your Watch History, Your Insights, Your Data.</h2>
 
 Tired of platforms hoarding your viewing habits without giving anything back? YouTube Wrapped is like Spotify Wrapped—but for YouTube, and fully under your control.
