@@ -46,7 +46,7 @@ cache_dir.mkdir(parents=True, exist_ok=True)
 data_dir = app_data_dir / "data"
 data_dir.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI()
+app = FastAPI(debug=True)
 syftbox = Syftbox(app=app)
 
 
@@ -490,8 +490,11 @@ async def delete_enriched():
 async def unpublish(year: int | str):
     """Endpoint to publish a wrapped HTML file for a given year."""
     wrapped_path = client.datasite_path / "public" / app_name
-    os.remove(wrapped_path / f"youtube-wrapped-{year}.html")
-    os.remove(wrapped_path / f"youtube-wrapped-{year}.png")
+    
+    if (wrapped_path / f"youtube-wrapped-{year}.html").exists():
+        os.remove(wrapped_path / f"youtube-wrapped-{year}.html")
+    if (wrapped_path / f"youtube-wrapped-{year}.png").exists():
+        os.remove(wrapped_path / f"youtube-wrapped-{year}.png")
     return RedirectResponse(url="/", status_code=303)
 
 
