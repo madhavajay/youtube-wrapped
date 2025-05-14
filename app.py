@@ -47,7 +47,7 @@ data_dir = app_data_dir / "data"
 data_dir.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(debug=True)
-syftbox = Syftbox(app=app)
+syftbox = Syftbox(app=app, name=app_name)
 
 
 # @syftbox.on_request("/ping")
