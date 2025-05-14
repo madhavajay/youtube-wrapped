@@ -21,7 +21,11 @@ Installs SyftBox + youtube-wrapped on MacOS and Linux:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/install.sh | sh
 ```
+```bash
+Start the client now? [y/n] y
+```
 
+Open <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>
 
 
 <h2>Your Watch History, Your Insights, Your Data.</h2>

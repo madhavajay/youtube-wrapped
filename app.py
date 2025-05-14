@@ -61,7 +61,6 @@ app.mount("/js", StaticFiles(directory=current_dir / "assets" / "js"), name="js"
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def ui_home(request: Request):
-    return "OK"
     pipeline_state = YoutubeDataPipelineState()
     template_path = current_dir / "assets" / "home.html"
     
