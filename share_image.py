@@ -5,8 +5,8 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import json
 
-def create_share_image(year, output_path):
-    with open(f"./cache/youtube-wrapped-{year}.json") as f:
+def create_share_image(year, app_data_dir, output_path):
+    with open(app_data_dir / "cache" / f"youtube-wrapped-{year}.json") as f:
         data = json.loads(f.read())
 
     year = str(data["year"])

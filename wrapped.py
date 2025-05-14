@@ -23,9 +23,9 @@ def format_human_date(dt: datetime) -> str:
     return f"{dt.strftime('%A')} the {ordinal(dt.day)} of {dt.strftime('%B')}"
 
 
-def generate_wrapped_json(year: int | str):
+def generate_wrapped_json(year: int | str, data_dir, cache_dir):
     # Load your CSV
-    df = pd.read_csv(f'./data/watch-history-enriched.csv')
+    df = pd.read_csv(data_dir / "watch-history-enriched.csv")
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
@@ -243,15 +243,15 @@ def generate_wrapped_json(year: int | str):
         json_stats["top_day_date_day_name"] = None
         json_stats["top_day_minutes"] = 0
     
-    with open(f"./cache/youtube-wrapped-{year}.json", "w") as f:
+    with open(cache_dir / f"youtube-wrapped-{year}.json", "w") as f:
         f.write(json.dumps(json_stats))
 
 
-def create_wrapped_page(year: int | str, client):
-    generate_wrapped_json(year)
+def create_wrapped_page(year: int | str, client, data_dir, cache_dir):
+    generate_wrapped_json(year, data_dir, cache_dir)
 
     data = {}
-    with open(f"./cache/youtube-wrapped-{year}.json", "r") as f:
+    with open(cache_dir / f"youtube-wrapped-{year}.json", "r") as f:
         data = json.load(f)
 
     # Prepare processed fields
@@ -288,7 +288,7 @@ def create_wrapped_page(year: int | str, client):
     )
 
     # Write to output file
-    with open(f'./cache/youtube-wrapped-{year}.html', 'w', encoding='utf-8') as f:
+    with open(cache_dir / f'youtube-wrapped-{year}.html', 'w', encoding='utf-8') as f:
         f.write(rendered_html)
 
     return rendered_html

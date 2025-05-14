@@ -1,4 +1,7 @@
 from __future__ import annotations
+import requests
+from fastapi import FastAPI
+from fastsyftbox import Syftbox
 import yaml
 import dateparser
 from fastapi import BackgroundTasks
@@ -9,9 +12,8 @@ import asyncio
 import json
 from fastapi import UploadFile, File
 from pathlib import Path
-from box import SyftboxApp
 from fastapi.responses import RedirectResponse
-from fastapi import FastAPI, Request, Query
+from fastapi import Request, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
@@ -35,10 +37,20 @@ app_name = "youtube-wrapped"
 wrapped_path = client.datasite_path / "public" / app_name
 client.makedirs(wrapped_path)
 
-data_dir = Path("./data")
+app_data_dir = Path(client.config.data_dir) / "private" / "app_data" /  app_name
+app_data_dir.mkdir(parents=True, exist_ok=True)
+
+cache_dir = app_data_dir / "cache"
+cache_dir.mkdir(parents=True, exist_ok=True)
+
+data_dir = app_data_dir / "data"
 data_dir.mkdir(parents=True, exist_ok=True)
 
-# @box.on_request("/ping")
+app = FastAPI()
+syftbox = Syftbox(app=app)
+
+
+# @syftbox.on_request("/ping")
 # def ping_handler(ping: PingRequest) -> PongResponse:
 #     """Handle a ping request and return a pong response."""
 #     logger.info(f"Got ping request - {ping}")
@@ -47,9 +59,7 @@ data_dir.mkdir(parents=True, exist_ok=True)
 #         ts=datetime.now(timezone.utc),
 #     )
 
-
-app = FastAPI()
-syftbox = SyftboxApp("youtube-wrapped", app=app, client=client)
+ensure_syft_yaml(client)
 
 current_dir = Path(__file__).parent
 
@@ -61,7 +71,7 @@ app.mount("/js", StaticFiles(directory=current_dir / "assets" / "js"), name="js"
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def ui_home(request: Request):
-    pipeline_state = YoutubeDataPipelineState()
+    pipeline_state = YoutubeDataPipelineState(app_data_dir)
     template_path = current_dir / "assets" / "home.html"
     
     with open(template_path) as f:
@@ -70,73 +80,80 @@ async def ui_home(request: Request):
     years = pipeline_state.get_years()
     year_stats = []
 
-    if pipeline_state.enriched_data_exists():
-        for year in years:
-            json_file_path = current_dir / "cache" / f"youtube-wrapped-{year}.json"
-            if not json_file_path.exists():
-                generate_wrapped_json(year)
+    try:
+        if pipeline_state.enriched_data_exists():
+            for year in years:
+                json_file_path = cache_dir / f"youtube-wrapped-{year}.json"
+                if not json_file_path.exists():
+                    generate_wrapped_json(year, data_dir, cache_dir)
 
+                if json_file_path.exists():
+                    with open(json_file_path, "r") as json_file:
+                        stats = json.load(json_file)
+                        published = (wrapped_path / f"youtube-wrapped-{year}.html").exists()
+                        year_stats.append({
+                            "total_views": int(stats["total_views"]),
+                            "total_hours": int(stats['total_hours']),
+                            "total_days": int(stats["total_days"]),
+                            "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
+                            "year": year,
+                            "published": published
+                        })
+
+            json_file_path = cache_dir / f"youtube-wrapped-all.json"
+            if not json_file_path.exists():
+                generate_wrapped_json("all", data_dir, cache_dir)
             if json_file_path.exists():
                 with open(json_file_path, "r") as json_file:
                     stats = json.load(json_file)
-                    published = (wrapped_path / f"youtube-wrapped-{year}.html").exists()
+                    published = (wrapped_path / f"youtube-wrapped-all.html").exists()
                     year_stats.append({
                         "total_views": int(stats["total_views"]),
                         "total_hours": int(stats['total_hours']),
                         "total_days": int(stats["total_days"]),
                         "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
-                        "year": year,
+                        "year": "all",
                         "published": published
-                    })
-
-        json_file_path = current_dir / "cache" / f"youtube-wrapped-all.json"
-        if not json_file_path.exists():
-            generate_wrapped_json("all")
-        if json_file_path.exists():
-            with open(json_file_path, "r") as json_file:
-                stats = json.load(json_file)
-                published = (wrapped_path / f"youtube-wrapped-all.html").exists()
-                year_stats.append({
-                    "total_views": int(stats["total_views"]),
-                    "total_hours": int(stats['total_hours']),
-                    "total_days": int(stats["total_days"]),
-                    "average_per_day": f"{stats['average_hours']}:{stats['average_minutes']:02d}",
-                    "year": "all",
-                    "published": published
-                })    
+                    })    
+    except Exception as e:
+        logger.error(f"An error occurred while generating wrapped cache json: {e}")
 
     template = jinja2.Template(template_content)
     wrapped_url = f"https://syftboxdev.openmined.org/datasites/{client.email}/public/youtube-wrapped/"
-    rendered_content = template.render(
-        source_data_exists=pipeline_state.source_data_exists(),
-        enriched_data_exists=pipeline_state.enriched_data_exists(),
-        step_3_summarize=pipeline_state.step_3_summarize(),
-        step_4_publish=pipeline_state.step_4_publish(),
-        setup_api_key=pipeline_state.setup_api_key(),
-        watch_history_path=pipeline_state.get_watch_history_path(),
-        watch_history_csv_path=pipeline_state.get_watch_history_csv_path(),
-        watch_history_file_size_mb=pipeline_state.get_watch_history_file_size_mb(),
-        total_rows=pipeline_state.get_total_rows(),
-        is_processing=pipeline_state.is_processing(),
-        processed_rows=pipeline_state.get_processed_rows(),
-        enriched_data_path=pipeline_state.get_enriched_data_path(),
-        enriched_rows=pipeline_state.get_enriched_rows(),
-        missing_rows=pipeline_state.get_missing_rows(),
-        is_complete=bool(pipeline_state.get_processed_rows() == pipeline_state.get_total_rows()),
-        years=year_stats,
-        wrapped_url=wrapped_url
-    )
+    render_context = {
+        "source_data_exists": pipeline_state.source_data_exists(),
+        "enriched_data_exists": pipeline_state.enriched_data_exists(),
+        "step_3_summarize": pipeline_state.step_3_summarize(),
+        "step_4_publish": pipeline_state.step_4_publish(),
+        "setup_api_key": pipeline_state.setup_api_key(),
+        "watch_history_path": pipeline_state.get_watch_history_path(),
+        "watch_history_csv_path": pipeline_state.get_watch_history_csv_path(),
+        "watch_history_file_size_mb": pipeline_state.get_watch_history_file_size_mb(),
+        "total_rows": pipeline_state.get_total_rows(),
+        "is_processing": pipeline_state.is_processing(),
+        "processed_rows": pipeline_state.get_processed_rows(),
+        "enriched_data_path": pipeline_state.get_enriched_data_path(),
+        "enriched_rows": pipeline_state.get_enriched_rows(),
+        "missing_rows": pipeline_state.get_missing_rows(),
+        "is_complete": bool(pipeline_state.get_processed_rows() == pipeline_state.get_total_rows()),
+        "years": year_stats,
+        "wrapped_url": wrapped_url
+    }
+    
+    # print(render_context)
+    
+    rendered_content = template.render(**render_context)
 
     return HTMLResponse(rendered_content)
 
 @app.get("/summarize", response_class=JSONResponse, include_in_schema=False)
 async def summarize(request: Request, year: int | str = datetime.now().year - 1):
-    pipeline_state = YoutubeDataPipelineState()
+    pipeline_state = YoutubeDataPipelineState(app_data_dir)
 
     from wrapped import create_wrapped_page
     from share_image import create_share_image
-    create_share_image(year, current_dir / "cache" / f"youtube-wrapped-{year}.png")
-    rendered_html = create_wrapped_page(year, client)
+    create_share_image(year, app_data_dir, cache_dir / f"youtube-wrapped-{year}.png")
+    rendered_html = create_wrapped_page(year, client, data_dir, cache_dir)
 
 
     return HTMLResponse(rendered_html)
@@ -144,7 +161,7 @@ async def summarize(request: Request, year: int | str = datetime.now().year - 1)
 
 @app.post("/start-processing", include_in_schema=False)
 async def start_processing(request: Request, background_tasks: BackgroundTasks):
-    pipeline_state = YoutubeDataPipelineState()
+    pipeline_state = YoutubeDataPipelineState(app_data_dir)
     
     # Check if source data exists and API key is set up
     if not (pipeline_state.source_data_exists() and pipeline_state.setup_api_key()):
@@ -156,9 +173,9 @@ async def start_processing(request: Request, background_tasks: BackgroundTasks):
 
     # Run process_rows in the background
     def run_process():
-        pipeline_state = YoutubeDataPipelineState()
+        pipeline_state = YoutubeDataPipelineState(app_data_dir)
         youtube_api_token = None
-        config_path = current_dir / "cache" / "config.json"
+        config_path = cache_dir / "config.json"
         if config_path.exists():
             with config_path.open("r") as config_file:
                 config_data = json.load(config_file)
@@ -168,6 +185,7 @@ async def start_processing(request: Request, background_tasks: BackgroundTasks):
             process_rows(
                 client=client,
                 youtube_api_key=youtube_api_token,
+                app_data_dir=app_data_dir,
                 watch_history_path=pipeline_state.get_watch_history_csv_path(),
                 enriched_data_path=pipeline_state.get_enriched_data_path()
             )
@@ -186,7 +204,7 @@ async def start_processing(request: Request, background_tasks: BackgroundTasks):
 
 @app.post("/stop-processing", include_in_schema=False)
 async def stop_processing(request: Request, background_tasks: BackgroundTasks):
-    pipeline_state = YoutubeDataPipelineState()
+    pipeline_state = YoutubeDataPipelineState(app_data_dir)
 
     pipeline_state.set_keep_running(False)
 
@@ -201,7 +219,7 @@ async def stop_processing(request: Request, background_tasks: BackgroundTasks):
 
 @app.get("/processing-status", response_class=JSONResponse, include_in_schema=False)
 async def processing_status():
-    pipeline_state = YoutubeDataPipelineState()
+    pipeline_state = YoutubeDataPipelineState(app_data_dir)
     
     # Check if processing is ongoing
     is_processing = pipeline_state.is_processing()
@@ -227,7 +245,7 @@ async def processing_status():
 
 @app.get("/download", response_class=HTMLResponse, include_in_schema=False)
 async def ui_download(request: Request):
-    pipeline_state = YoutubeDataPipelineState()
+    pipeline_state = YoutubeDataPipelineState(app_data_dir)
     template_path = current_dir / "assets" / "download.html"
     
     with open(template_path) as f:
@@ -342,10 +360,10 @@ async def process_upload(upload_path):
     df = pd.DataFrame(data)
 
     # Save to CSV
-    df.to_csv('data/watch-history.csv', index=False)
+    df.to_csv(data_dir / 'watch-history.csv', index=False)
 
     syft_uri = f"syft://{client.email}/private/youtube-wrapped/watch-history.csv"
-    private_path = current_dir / "data" / "watch-history.csv"
+    private_path = data_dir / "watch-history.csv"
     schema_name = "com.madhavajay.youtube-wrapped.watch-history-raw:1.0.0"
     add_dataset(client, "watch-history-raw-csv", syft_uri,private_path, schema_name)
 
@@ -369,7 +387,7 @@ async def upload_watch_history(request: Request):
         print("Debug: Uploaded file is empty.")
         return HTMLResponse("Uploaded file is empty.", status_code=400)
 
-    upload_path = current_dir / "data" / "watch-history.html"
+    upload_path = data_dir / "watch-history.html"
     with open(upload_path, "wb") as f:
         f.write(contents)
     print(f"Debug: File written to {upload_path}")
@@ -382,8 +400,7 @@ async def upload_watch_history(request: Request):
 @app.api_route("/api", methods=["GET", "POST"])
 async def api_setup(request: Request):
     """Endpoint to enrich watch history data."""
-    enrich_html_path = current_dir / "assets/api.html"
-    config_path = current_dir / "cache" / "config.json"
+    config_path = cache_dir / "config.json"
     
     # Check if the config file exists and load the API key
     youtube_api_token = None
@@ -402,15 +419,30 @@ async def api_setup(request: Request):
 
     elif request.method == "POST":
         form_data = await request.form()
-        youtube_api_token = form_data.get("youtube-api-key")
+        youtube_api_token = form_data.get("youtube-api-key", "").strip()
         
-        if youtube_api_token:
-            cache_dir = current_dir / "cache"
-            cache_dir.mkdir(exist_ok=True)
-            config_path = cache_dir / "config.json"
+        config_path = cache_dir / "config.json"
+        existing_api_token = None
+
+        if config_path.exists():
+            with config_path.open("r") as config_file:
+                config_data = json.load(config_file)
+                existing_api_token = config_data.get("youtube-api-key", "")
+
+        if youtube_api_token and youtube_api_token != existing_api_token:
+            response = requests.get(
+                "https://www.googleapis.com/youtube/v3/channels",
+                params={
+                    "part": "id,snippet",
+                    "forUsername": "GoogleDevelopers",  # OR use "id" param for channel ID
+                    "key": youtube_api_token
+                }
+            )
+
+            if response.status_code != 200:
+                return JSONResponse(content={"error": "Invalid YouTube API token"}, status_code=400)
 
             config_data = {"youtube-api-key": youtube_api_token}
-            
             with config_path.open("w") as config_file:
                 json.dump(config_data, config_file)
 
@@ -428,12 +460,31 @@ async def api_setup(request: Request):
 async def publish(year: int | str):
     """Endpoint to publish a wrapped HTML file for a given year."""
     wrapped_path = client.datasite_path / "public" / app_name
-    shutil.copy(current_dir / "cache" / f"youtube-wrapped-{year}.html", wrapped_path / f"youtube-wrapped-{year}.html")
-    if not (current_dir / "cache" / f"youtube-wrapped-{year}.png").exists():
+
+    from wrapped import create_wrapped_page
+    from share_image import create_share_image
+    create_share_image(year, app_data_dir, cache_dir / f"youtube-wrapped-{year}.png")
+    create_wrapped_page(year, client, data_dir, cache_dir)
+
+    shutil.copy(cache_dir / f"youtube-wrapped-{year}.html", wrapped_path / f"youtube-wrapped-{year}.html")
+    if not (cache_dir / f"youtube-wrapped-{year}.png").exists():
         from share_image import create_share_image
-        create_share_image(year, current_dir / "cache" / f"youtube-wrapped-{year}.png")
-    shutil.copy(current_dir / "cache" / f"youtube-wrapped-{year}.png", wrapped_path / f"youtube-wrapped-{year}.png")
+        create_share_image(year, app_data_dir, cache_dir / f"youtube-wrapped-{year}.png")
+    shutil.copy(cache_dir / f"youtube-wrapped-{year}.png", wrapped_path / f"youtube-wrapped-{year}.png")
     return RedirectResponse(url="/", status_code=303)
+
+
+@app.get("/delete-enriched", include_in_schema=False)
+async def delete_enriched():
+    """Endpoint to delete the enriched watch history CSV file."""
+    try:
+        enriched_file_path = data_dir / "watch-history-enriched.csv"
+        if enriched_file_path.exists():
+            os.remove(enriched_file_path)
+    except Exception as e:
+        logger.error(f"An error occurred while deleting the enriched file: {e}")
+    return RedirectResponse(url="/", status_code=303)
+
 
 @app.get("/unpublish", include_in_schema=False)
 async def unpublish(year: int | str):
@@ -448,7 +499,7 @@ async def unpublish(year: int | str):
 async def launch_takeout_agent():
     from helper import automate_takeout
     try:
-        await automate_takeout()
+        await automate_takeout(cache_dir)
     except Exception as e:
         logger.error(f"An error occurred while launching the takeout agent: {e}")
     return RedirectResponse(url="/download", status_code=303)
@@ -456,9 +507,13 @@ async def launch_takeout_agent():
 @app.get("/launch-gmail-download-agent", include_in_schema=False)
 async def launch_gmail_download_agent():
     from helper import automate_download_email_link
-    await automate_download_email_link()
     try:
-        watch_history_path = current_dir / "data" / "watch-history.html"
+        await automate_download_email_link(cache_dir)
+    except Exception as e:
+        logger.error(f"An error occurred while closing the page: {e}")
+
+    try:
+        watch_history_path = data_dir / "watch-history.html"
         if watch_history_path.exists():
             await process_upload(watch_history_path)
     except Exception as e:

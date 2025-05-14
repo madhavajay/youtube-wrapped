@@ -4,15 +4,15 @@ from pathlib import Path
 import pandas as pd
 
 class YoutubeDataPipelineState:
-    def __init__(self):
+    def __init__(self, app_data_dir: Path):
         self.paths = {
-            "watch_history": Path("data/watch-history.html"),
-            "watch_history_csv": Path("data/watch-history.csv"),
-            "watch_history_enriched": Path("data/watch-history-enriched.csv"),
-            "watch_history_summary": Path("data/watch-history-summary.json"),
-            "youtube_wrapped": Path("data/youtube-wrapped.html")
+            "watch_history": Path(app_data_dir / "data/watch-history.html"),
+            "watch_history_csv": Path(app_data_dir / "data/watch-history.csv"),
+            "watch_history_enriched": Path(app_data_dir / "data/watch-history-enriched.csv"),
+            "watch_history_summary": Path(app_data_dir / "data/watch-history-summary.json"),
+            "youtube_wrapped": Path(app_data_dir / "data/youtube-wrapped.html")
         }
-        self.config_path = Path("cache/config.json")
+        self.config_path = Path(app_data_dir / "cache" / "config.json")
         self.config_data = self.load_config()
         
     def load_config(self) -> dict:

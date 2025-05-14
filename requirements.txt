@@ -1,14 +1,11 @@
+fastsyftbox
 isodate
 dotenv
 pandas
 tqdm
 tzlocal
-syft-event
-fastapi
-uvicorn
 jinja2
 python-multipart
-syft-core
 pillow
 dateparser
 playwright

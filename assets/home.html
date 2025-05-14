@@ -210,15 +210,30 @@
             {% endif %}
             <a href="javascript:void(0)" id="process-btn"
                 class="action-btn {% if not (source_data_exists and setup_api_key) or is_complete %}disabled{% endif %}"
-                onclick="toggleProcessing()">
+                onclick="toggleProcessing()"
+                style="height:38px; min-width:76px; max-width: 76px; padding:5px; display: flex; justify-content: center; align-items: center;">
                 {% if is_complete %}
                 Complete
                 {% elif is_processing %}
-                <span class="spinner"></span>Processing
+                <span class="spinner"></span>Cancel
                 {% else %}
-                Process
+                Run
                 {% endif %}
             </a>
+            <div>
+                <a href="javascript:void(0)" class="action-btn"
+                    style="min-width: 10px; padding:5px; max-width:5px; height:38px; display: flex; align-items: center;"
+                    onclick="confirmDelete()">
+                    &#10006;
+                </a>
+                <script>
+                    function confirmDelete() {
+                        if (confirm("Are you sure you want to delete your enriched data?")) {
+                            window.location.href = "/delete-enriched";
+                        }
+                    }
+                </script>
+            </div>
         </div>
 
         <!-- Modified years section with table -->
@@ -279,7 +294,7 @@
             if (!processBtn.classList.contains('disabled')) {
                 if (processBtn.innerHTML.includes('Cancel')) {
                     // If currently showing cancel, change to process without spinner
-                    processBtn.innerHTML = 'Process';
+                    processBtn.innerHTML = 'Run';
 
                     // Send AJAX request to stop processing
                     fetch('/stop-processing', {

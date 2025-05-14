@@ -15,15 +15,17 @@ from utils import YoutubeDataPipelineState
 from resources import add_dataset, load_schema
 
 
-METADATA_FILE = 'cache/youtube_metadata.json'
 
-def load_metadata_cache():
+
+def load_metadata_cache(app_data_dir):
+    METADATA_FILE = app_data_dir / 'cache' / 'youtube_metadata.json'
     if os.path.exists(METADATA_FILE):
         with open(METADATA_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     return {}
 
-def save_metadata_cache(cache):
+def save_metadata_cache(cache, app_data_dir):
+    METADATA_FILE = app_data_dir / 'cache' / 'youtube_metadata.json'
     with open(METADATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(cache, f, indent=2, ensure_ascii=False)
 
@@ -45,9 +47,9 @@ def fetch_video_metadata(video_ids, api_key, cache):
     for i in range(0, len(uncached_video_ids), 50):
         batch = uncached_video_ids[i:i + 50]
         params = {
+            "key": api_key,
             "part": "snippet,contentDetails,statistics",
             "id": ",".join(batch),
-            "key": api_key
         }
         
         try:
@@ -93,7 +95,7 @@ def get_duration_seconds_from_metadata(metadata):
             return None
     return None
 
-def fetch_and_save_youtube_category_mapping(api_key: str, region_code: str = 'US', output_file: str = 'cache/youtube_category_region.json') -> dict:
+def fetch_and_save_youtube_category_mapping(api_key: str, region_cache, region_code: str = 'US') -> dict:
         """
         Fetch YouTube video categories, save to a file, and return a mapping of category ID to category Title.
         If the output file already exists, load and return it instead of fetching.
@@ -106,9 +108,9 @@ def fetch_and_save_youtube_category_mapping(api_key: str, region_code: str = 'US
         Returns:
             dict: Mapping of category ID (as str) to category Title.
         """
-        if os.path.exists(output_file):
+        if os.path.exists(region_cache):
             # Load and return existing file
-            with open(output_file, 'r', encoding='utf-8') as f:
+            with open(region_cache, 'r', encoding='utf-8') as f:
                 category_mapping = json.load(f)
             return category_mapping
 
@@ -127,14 +129,14 @@ def fetch_and_save_youtube_category_mapping(api_key: str, region_code: str = 'US
         category_mapping = {item['id']: item['snippet']['title'] for item in data.get('items', [])}
 
         # Save to JSON file
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(region_cache, 'w', encoding='utf-8') as f:
             json.dump(category_mapping, f, ensure_ascii=False, indent=2)
 
         return category_mapping
 
 
-def process_rows(client, youtube_api_key: str, watch_history_path: str, enriched_data_path: str, n: int = 500, year_filter: int = None):
-    pipeline_state = YoutubeDataPipelineState()
+def process_rows(client, youtube_api_key: str, app_data_dir, watch_history_path: str, enriched_data_path: str, n: int = 500, year_filter: int = None):
+    pipeline_state = YoutubeDataPipelineState(app_data_dir)
 
     if not pipeline_state.is_keep_running():
         return
@@ -169,7 +171,7 @@ def process_rows(client, youtube_api_key: str, watch_history_path: str, enriched
         # Filter for rows where the year matches
         df = df[df['watch_time_dt'].dt.year == year_filter]
     # Load metadata cache
-    cache = load_metadata_cache()
+    cache = load_metadata_cache(app_data_dir)
 
     durations = []
     categories = []
@@ -259,10 +261,11 @@ def process_rows(client, youtube_api_key: str, watch_history_path: str, enriched
                 video_names.append((idx, video_name))
 
     if len(cache) > previous_cache_len:
-        save_metadata_cache(cache)
+        save_metadata_cache(cache, app_data_dir)
         previous_cache_len = len(cache)
 
-    mapping = fetch_and_save_youtube_category_mapping(youtube_api_key)
+    region_cache = app_data_dir / 'cache' / 'youtube_category_region.json'
+    mapping = fetch_and_save_youtube_category_mapping(youtube_api_key, region_cache)
 
     # Create or reset the columns
     links_to_process.loc[:, 'duration_seconds'] = None
