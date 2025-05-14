@@ -9,6 +9,9 @@ ASK_RUN_CLIENT=1
 # --run => disables the prompt & runs the client
 RUN_CLIENT=0
 
+# Optional app to install via SyftBox (can be injected at build time)
+APP_TO_INSTALL="${APP_TO_INSTALL:-__SYFTBOX_APP_INJECT__}"
+
 APP_NAME="syftbox"
 ARTIFACT_BASE_URL=${ARTIFACT_BASE_URL:-"https://syftboxdev.openmined.org"}
 ARTIFACT_DOWNLOAD_URL="$ARTIFACT_BASE_URL/releases"
@@ -161,6 +164,12 @@ run_client() {
     exec ~/.local/bin/syftbox < /dev/tty
 }
 
+run_install_app() {
+    echo
+    success "Installing app ${APP_TO_INSTALL}..."
+    eval ~/.local/bin/syftbox app install --force "${APP_TO_INSTALL}" < /dev/tty
+}
+
 prompt_run_client() {
     # prompt if they want to start the client
     echo
@@ -205,6 +214,11 @@ pre_install() {
 
 post_install() {
     success "Installation completed! $(~/.local/bin/syftbox -v)"
+
+    if [ "$APP_TO_INSTALL" != "" ] && [ "$APP_TO_INSTALL" != "__SYFTBOX_APP_INJECT__" ]
+    then 
+        run_install_app
+    fi
 
     if [ $RUN_CLIENT -eq 1 ]
     then run_client

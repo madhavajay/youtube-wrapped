@@ -20,7 +20,8 @@ jobs:
         run: |
           mkdir -p ./installer
           cp ./installer/install.sh ./installer/install.template.sh
-          sed "s|__SYFTBOX_APP_INJECT__|syftbox app install $REPO_URL|" ./installer/install.template.sh > ./install.sh
+          sed "s|APP_TO_INSTALL=\"__SYFTBOX_APP_INJECT__\"|APP_TO_INSTALL=\"$REPO_URL\"|" \
+            ./installer/install.template.sh > ./install.sh
           chmod +x ./install.sh
 
       - name: Commit generated install.sh
