@@ -282,116 +282,238 @@
             </table>
             {% endif %}
         </div>
-    </div>
 
-    <script>
-        // Function to start or cancel processing
-        function toggleProcessing() {
-            const processBtn = document.getElementById('process-btn');
-            const processingStats = document.getElementById('processing-stats');
 
-            // Check if button is not disabled
-            if (!processBtn.classList.contains('disabled')) {
-                if (processBtn.innerHTML.includes('Cancel')) {
-                    // If currently showing cancel, change to process without spinner
-                    processBtn.innerHTML = 'Run';
+        <div class="stats-card"
+            style="margin-top: 40px; background-color: #2a2a2a; border-radius: 12px; padding: 25px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); max-width: 1000px; margin-left: auto; margin-right: auto;">
+            <h2
+                style="color: #ff3e3e; font-size: 28px; margin-bottom: 25px; border-bottom: 2px solid #3a3a3a; padding-bottom: 10px;">
+                Explore Other Users</h2>
 
-                    // Send AJAX request to stop processing
-                    fetch('/stop-processing', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
+            <script>
+                // Simple function to generate a color based on text
+                function stringToColor(str) {
+                    let hash = 0;
+                    for (let i = 0; i < str.length; i++) {
+                        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    let color = '#';
+                    for (let i = 0; i < 3; i++) {
+                        const value = (hash >> (i * 8)) & 0xFF;
+                        color += ('00' + value.toString(16)).substr(-2);
+                    }
+                    return color;
+                }
+
+                // Function to get initials from email
+                function getInitials(email) {
+                    const name = email.split('@')[0];
+                    const parts = name.split(/[._-]/);
+                    let initials = '';
+                    for (let i = 0; i < Math.min(parts.length, 2); i++) {
+                        if (parts[i].length > 0) {
+                            initials += parts[i][0].toUpperCase();
                         }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                console.log('Processing cancelled successfully');
-                                stopPolling();
-                            } else {
-                                console.error('Failed to cancel processing');
+                    }
+                    return initials.substring(0, 2);
+                }
+
+                // Render all avatar circles
+                document.addEventListener('DOMContentLoaded', function () {
+                    const avatarCircles = document.querySelectorAll('.avatar-circle');
+
+                    // Load CryptoJS for MD5 hashing (for Gravatar)
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+                    script.onload = function () {
+                        avatarCircles.forEach(async circle => {
+                            const email = circle.getAttribute('data-email');
+                            const initials = getInitials(email);
+                            const bgColor = stringToColor(email);
+
+                            // Set background color first (fallback)
+                            circle.style.backgroundColor = bgColor;
+
+                            // Add initials as content (shown if gravatar fails)
+                            const initialsSpan = document.createElement('span');
+                            initialsSpan.textContent = initials;
+                            circle.appendChild(initialsSpan);
+
+                            // Try to set Gravatar
+                            if (typeof CryptoJS !== 'undefined') {
+                                const emailHash = CryptoJS.MD5(email.trim().toLowerCase()).toString();
+                                circle.style.backgroundImage = `url('https://www.gravatar.com/avatar/${emailHash}?d=404')`;
+
+                                // Create image to test if Gravatar exists
+                                const img = new Image();
+                                img.onload = function () {
+                                    // If gravatar loads, hide the initials
+                                    initialsSpan.style.opacity = '0';
+                                };
+                                img.onerror = function () {
+                                    // If gravatar fails, remove background and show initials
+                                    circle.style.backgroundImage = '';
+                                };
+                                img.src = `https://www.gravatar.com/avatar/${emailHash}?d=404`;
+                            }
+                        });
+                    };
+                    document.head.appendChild(script);
+                });
+            </script>
+
+            <!-- Two-column layout container -->
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px;">
+                {% for email, files in other_files.items() %}
+                <div style="flex: 0 0 calc(50% - 20px); margin-bottom: 30px; min-width: 300px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <!-- Avatar circle with initials -->
+                        <div class="avatar-circle" data-email="{{ email }}"
+                            style="width: 48px; height: 48px; border-radius: 50%; margin-right: 15px; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; font-size: 18px; text-transform: uppercase; flex-shrink: 0; border: 2px solid #3a3a3a; background-size: cover; position: relative;">
+                            <!-- JS will populate this -->
+                        </div>
+
+                        <!-- Email/Name with link -->
+                        <a href="{{ syftbox_domain }}/datasites/{{ email }}/public/"
+                            style="color: #3498db; text-decoration: none; font-size: 20px; transition: color 0.2s ease; display: block; overflow: hidden; text-overflow: ellipsis;"
+                            onmouseover="this.style.color='#2980b9'" onmouseout="this.style.color='#3498db'"
+                            target="_blank">
+                            <span style="display: block; font-weight: bold;">{{ email.split('@')[0]|replace('.', '
+                                ')|title
+                                }}</span>
+                            <span style="font-size: 14px; color: #999; display: block;">{{ email }}</span>
+                        </a>
+                    </div>
+
+                    <ul style="list-style-type: none; padding-left: 63px; margin-top: 8px;">
+                        {% for file in files %}
+                        <li style="margin-bottom: 10px; display: flex; align-items: center;">
+                            <span style="color: #ff9800; margin-right: 8px;">•</span>
+                            <a href="{{ file }}"
+                                style="color: #9c88ff; text-decoration: none; font-size: 16px; transition: color 0.2s ease;"
+                                onmouseover="this.style.color='#8c78ef'" onmouseout="this.style.color='#9c88ff'"
+                                target="_blank">
+                                {{ file.split('youtube-wrapped/', 1)[1] }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+
+
+
+        <script>
+            // Function to start or cancel processing
+            function toggleProcessing() {
+                const processBtn = document.getElementById('process-btn');
+                const processingStats = document.getElementById('processing-stats');
+
+                // Check if button is not disabled
+                if (!processBtn.classList.contains('disabled')) {
+                    if (processBtn.innerHTML.includes('Cancel')) {
+                        // If currently showing cancel, change to process without spinner
+                        processBtn.innerHTML = 'Run';
+
+                        // Send AJAX request to stop processing
+                        fetch('/stop-processing', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
                             }
                         })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
-                } else {
-                    // Update button to show cancel state with spinner
-                    processBtn.innerHTML = '<span class="spinner"></span>Cancel';
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    console.log('Processing cancelled successfully');
+                                    stopPolling();
+                                } else {
+                                    console.error('Failed to cancel processing');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                            });
+                    } else {
+                        // Update button to show cancel state with spinner
+                        processBtn.innerHTML = '<span class="spinner"></span>Cancel';
 
-                    // Start AJAX polling
-                    startPolling();
+                        // Start AJAX polling
+                        startPolling();
 
-                    // Send AJAX request to start processing
-                    fetch('/start-processing', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                console.log('Processing started successfully');
-                            } else {
-                                console.error('Failed to start processing');
+                        // Send AJAX request to start processing
+                        fetch('/start-processing', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    console.log('Processing started successfully');
+                                } else {
+                                    console.error('Failed to start processing');
+                                    processBtn.innerHTML = 'Process';
+                                    stopPolling();
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
                                 processBtn.innerHTML = 'Process';
                                 stopPolling();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            processBtn.innerHTML = 'Process';
-                            stopPolling();
-                        });
+                            });
+                    }
                 }
             }
-        }
 
-        let pollingInterval;
+            let pollingInterval;
 
-        // Function to start polling for updates
-        function startPolling() {
-            // Poll every 3 seconds
-            pollingInterval = setInterval(checkProcessingStatus, 3000);
-        }
+            // Function to start polling for updates
+            function startPolling() {
+                // Poll every 3 seconds
+                pollingInterval = setInterval(checkProcessingStatus, 3000);
+            }
 
-        // Function to stop polling
-        function stopPolling() {
-            clearInterval(pollingInterval);
-        }
+            // Function to stop polling
+            function stopPolling() {
+                clearInterval(pollingInterval);
+            }
 
-        // Function to check processing status
-        function checkProcessingStatus() {
-            fetch('/processing-status')
-                .then(response => response.json())
-                .then(data => {
-                    const processingStats = document.getElementById('processing-stats');
-                    processingStats.textContent = `${data.processed_rows}/${data.total_rows}`;
+            // Function to check processing status
+            function checkProcessingStatus() {
+                fetch('/processing-status')
+                    .then(response => response.json())
+                    .then(data => {
+                        const processingStats = document.getElementById('processing-stats');
+                        processingStats.textContent = `${data.processed_rows}/${data.total_rows}`;
 
-                    const processBtn = document.getElementById('process-btn');
+                        const processBtn = document.getElementById('process-btn');
 
-                    // If processing is complete
-                    if (data.is_complete) {
-                        processBtn.innerHTML = 'Complete';
-                        processBtn.classList.add('disabled');
-                        stopPolling();
+                        // If processing is complete
+                        if (data.is_complete) {
+                            processBtn.innerHTML = 'Complete';
+                            processBtn.classList.add('disabled');
+                            stopPolling();
 
-                        // Refresh the page after a short delay to update all status indicators
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
-                    } else if (!data.is_processing) {
-                        // If processing is not active
-                        processBtn.innerHTML = 'Process';
-                        processBtn.classList.remove('disabled');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking status:', error);
-                });
-        }
-    </script>
+                            // Refresh the page after a short delay to update all status indicators
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else if (!data.is_processing) {
+                            // If processing is not active
+                            processBtn.innerHTML = 'Process';
+                            processBtn.classList.remove('disabled');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking status:', error);
+                    });
+            }
+        </script>
 </body>
 
 </html>
