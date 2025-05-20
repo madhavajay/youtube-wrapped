@@ -25,7 +25,10 @@ curl -fsSL https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/hea
 Start the client now? [y/n] y
 ```
 
-Open <a href="http://localhost:8080" target="_blank">http://localhost:8080</a>
+SyftBox can assign a random port so look for something like this:
+```
+2025-05-20T13:13:16.848+10:00 INF app started app=youtube-wrapped url=http://localhost:53214
+```
 
 
 <h2>Your Watch History, Your Insights, Your Data.</h2>
@@ -64,9 +67,18 @@ To get started with `youtube-wrapped`, follow these steps:
    ```
 
 3. **Load the UI**:  
+   NOTE: the port is random on the newer syftbox.  
    After installing the `youtube-wrapped` app, you can load the user interface by clicking <a href="http://localhost:8080" target="_blank">http://localhost:8080</a> in your web browser. This will allow you to interact with the app and explore its features.
 
    <img src="assets/images/example-ui.png" alt="Example UI" width="500px">
 
 4. **Follow the Wizard**:  
    The wizard will guide you through the process of obtaining your data from [Google Takeout](https://takeout.google.com), acquiring a YouTube API v3 key, and enriching your data for comprehensive analysis. This step-by-step process ensures you have all the necessary components to make the most out of your YouTube Wrapped experience.
+
+
+## Dev Mode
+To play around you can kill syftbox and run ./run.sh from the source directory and then you'll get the default port listed in run.sh.
+```
+SYFTBOX_ASSIGNED_PORT=${SYFTBOX_ASSIGNED_PORT:-8080}
+```
+<a href="http://localhost:8080" target="_blank">http://localhost:8080</a>
