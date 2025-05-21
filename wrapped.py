@@ -44,11 +44,23 @@ def generate_wrapped_json(year: int | str, data_dir, cache_dir):
             # Already timezone-aware, just convert
             return dt.tz_convert(local_timezone)
 
-    # Step 1: Parse datetime normally, ignoring warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=FutureWarning)
-        warnings.simplefilter("ignore", category=UserWarning)
-        df["watch_time_dt"] = pd.to_datetime(df["watch_time"], errors="coerce")
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=FutureWarning)
+            warnings.simplefilter("ignore", category=UserWarning)
+            df["watch_time_dt"] = df["watch_time_dt"].apply(fix_timezone)
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        print(f"Error fixing timezone: {e}")
+        pass
+
+    # # Step 1: Parse datetime normally, ignoring warnings
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore", category=FutureWarning)
+    #     warnings.simplefilter("ignore", category=UserWarning)
+    #     df["watch_time_dt"] = pd.to_datetime(df["watch_time"], errors="coerce")
 
     # import pandas as pd
     # import matplotlib.pyplot as plt
@@ -80,8 +92,15 @@ def generate_wrapped_json(year: int | str, data_dir, cache_dir):
 
     if year != "all":
         year = int(year)
-        # Filter for rows where the year matches
-        df_year = df[df["watch_time_dt"].dt.year == year]
+        try:
+            # Filter for rows where the year matches
+            df_year = df[df["watch_time_dt"].dt.year == year]
+        except Exception as e:
+            import traceback
+
+            traceback.print_exc()
+            print(f"Error filtering by year: {e}")
+            pass
     else:
         df_year = df
 
