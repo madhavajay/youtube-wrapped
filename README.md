@@ -19,7 +19,7 @@ icon: https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/ma
 ## 1-liner Install
 Installs SyftBox + youtube-wrapped on MacOS and Linux:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/install.sh | sh
+curl -fsSL https://syftboxdev.openmined.org/install.sh | sh -s -- --apps=https://github.com/madhavajay/youtube-wrapped/
 ```
 ```bash
 Start the client now? [y/n] y
