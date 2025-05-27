@@ -118,18 +118,20 @@ class YoutubeDataPipelineState:
 
     def get_years(self) -> list:
         """Returns a sorted list of unique years from the 'watch_time_dt' column."""
-        enriched_data_path = self.get_enriched_data_path()
-        if os.path.exists(enriched_data_path):
-            df = pd.read_csv(enriched_data_path)
-            # Ensure 'watch_time_dt' is parsed as datetime
-            df["watch_time_dt"] = pd.to_datetime(df["watch_time_dt"], errors="coerce")
-            years = []
-            try:
+        try:
+            enriched_data_path = self.get_enriched_data_path()
+            if os.path.exists(enriched_data_path):
+                df = pd.read_csv(enriched_data_path)
+                # Ensure 'watch_time_dt' is parsed as datetime
+                df["watch_time_dt"] = pd.to_datetime(
+                    df["watch_time_dt"], errors="coerce"
+                )
                 years = df["watch_time_dt"].dropna().dt.year.unique()
-            except Exception as e:
-                print(f"Error getting years: {e}")
-                pass
-            return sorted(years.tolist())
+                years = years.tolist()
+                return sorted(years)
+        except Exception as e:
+            print(f"Error getting years: {e}")
+            pass
         return []
 
     def get_missing_rows(self) -> int:
