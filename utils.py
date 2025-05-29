@@ -124,7 +124,7 @@ class YoutubeDataPipelineState:
                 df = pd.read_csv(enriched_data_path)
                 # Ensure 'watch_time_dt' is parsed as datetime
                 df["watch_time_dt"] = pd.to_datetime(
-                    df["watch_time_dt"], errors="coerce"
+                    df["watch_time_dt"], errors="coerce", utc=True
                 )
                 years = df["watch_time_dt"].dropna().dt.year.unique()
                 years = years.tolist()

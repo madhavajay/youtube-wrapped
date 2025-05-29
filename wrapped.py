@@ -28,7 +28,9 @@ def generate_wrapped_json(year: int | str, data_dir, cache_dir):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         warnings.simplefilter("ignore", category=UserWarning)
-        df["watch_time_dt"] = pd.to_datetime(df["watch_time"], errors="coerce")
+        df["watch_time_dt"] = pd.to_datetime(
+            df["watch_time"], errors="coerce", utc=True
+        )
 
     # Step 2: Detect system timezone
     local_timezone = tzlocal.get_localzone()
@@ -60,7 +62,7 @@ def generate_wrapped_json(year: int | str, data_dir, cache_dir):
     # with warnings.catch_warnings():
     #     warnings.simplefilter("ignore", category=FutureWarning)
     #     warnings.simplefilter("ignore", category=UserWarning)
-    #     df["watch_time_dt"] = pd.to_datetime(df["watch_time"], errors="coerce")
+    #     df["watch_time_dt"] = pd.to_datetime(df["watch_time"], errors="coerce", utc=True)
 
     # import pandas as pd
     # import matplotlib.pyplot as plt

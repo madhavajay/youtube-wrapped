@@ -167,7 +167,9 @@ def process_rows(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         warnings.simplefilter("ignore", category=UserWarning)
-        df["watch_time_dt"] = pd.to_datetime(df["watch_time"], errors="coerce")
+        df["watch_time_dt"] = pd.to_datetime(
+            df["watch_time"], errors="coerce", utc=True
+        )
 
     # Step 2: Detect system timezone
     local_timezone = tzlocal.get_localzone()
