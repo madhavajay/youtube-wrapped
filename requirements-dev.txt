@@ -1,1 +1,5 @@
-jupyter
+pytest
+pytest-asyncio
+responses
+respx
+httpx
