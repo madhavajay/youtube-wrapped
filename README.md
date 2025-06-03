@@ -3,12 +3,12 @@ name: youtube-wrapped
 author: "madhava@openmined.org"
 version: 1.0.0
 source: https://github.com/madhavajay/youtube-wrapped
-home: https://syftboxdev.openmined.org/datasites/madhava@openmined.org/youtube-wrapped/index.html
+home: https://syftbox.net/datasites/madhava@openmined.org/youtube-wrapped/index.html
 icon: https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/icon.png
 ---
 
 <h1 align="left">🎬 YouTube Wrapped</h1>
-<a href="https://github.com/OpenMined/syftbox">
+<a href="https://syftbox.net/">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/images/mwsyftbox_white_on.png">
     <img alt="Logo" src="assets/images/mwsyftbox_black_on.png" width="200px" align="right" />
@@ -19,7 +19,7 @@ icon: https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/ma
 ## 1-liner Install
 Installs SyftBox + youtube-wrapped on MacOS and Linux:
 ```bash
-curl -fsSL https://syftboxdev.openmined.org/install.sh | sh -s -- --apps=https://github.com/madhavajay/youtube-wrapped/
+curl -fsSL https://syftbox.net/install.sh | sh -s -- --apps=https://github.com/madhavajay/youtube-wrapped/
 ```
 ```bash
 Start the client now? [y/n] y
@@ -46,18 +46,18 @@ Then, compare your wrapped with friends to see who’s binging what. Want more? 
 
 SyftBox is a new platform for building privacy-preserving applications and experiences that work over the internet without uploading your data. Instead of sending your data to a server, SyftBox lets you run powerful AI and analytics locally or in trusted environments, so your personal information stays private and secure.
 
-[read more here](https://github.com/OpenMined/syftbox)
+[read more here](https://syftbox.net/)
 
 
 ## Installation Steps
 
 To get started with `youtube-wrapped`, follow these steps:
 
-1. **Install Syft Box**:  
+1. **Install SyftBox**:  
    First, you need to install Syft Box. You can find the installation instructions at the following link:  
-   [Install Syft Box](https://github.com/OpenMined/syftbox)
+   [Install SyftBox](https://syftbox.net/)
    ```bash
-   curl -fsSL https://syftboxdev.openmined.org/install.sh | sh
+   curl -fsSL https://syftbox.net/install.sh | sh
    ```
 
 2. **Install the youtube-wrapped app**:  
