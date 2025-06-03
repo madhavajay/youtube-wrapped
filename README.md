@@ -43,10 +43,11 @@ Then, compare your wrapped with friends to see who’s binging what. Want more? 
 <img src="assets/images/youtube-wrapped-2024.png" alt="youtube-wrapped" width="400px">
 
 ## What is SyftBox?
-
+<a href="https://syftbox.net/" target="_blank"><img src="assets/images/syftbox_icon.png" style="width:200px; max-width: 200px;" align="right" target="_blank" /></a>
 SyftBox is a new platform for building privacy-preserving applications and experiences that work over the internet without uploading your data. Instead of sending your data to a server, SyftBox lets you run powerful AI and analytics locally or in trusted environments, so your personal information stays private and secure.
 
-[read more here](https://syftbox.net/)
+<a href="https://syftbox.net/" target="_blank">Read more about SyftBox here</a>
+<div style="clear: both;"></div>
 
 
 ## Installation Steps
