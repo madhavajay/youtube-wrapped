@@ -288,7 +288,7 @@ def create_wrapped_page(
         top_videos=data["top_videos_combined"],
         category_names=data["top_categories"],
         total_days=data["total_days"],
-        wrapped_url=f"https://syftboxdev.openmined.org/datasites/{client.email}/public/youtube-wrapped/",
+        wrapped_url=f"https://syftbox.net/datasites/{client.email}/public/youtube-wrapped/",
         email=client.email,
         clean_name=clean_name,
         other_files=other_files,

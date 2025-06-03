@@ -22,9 +22,8 @@ from syft_event import SyftEvents
 from metadata import process_rows
 from resources import add_dataset, ensure_syft_yaml
 from utils import YoutubeDataPipelineState
-from wrapped import generate_wrapped_json
 
-syftbox_domain = "https://syftboxdev.openmined.org"
+syftbox_domain = "https://syftbox.net"
 
 box = SyftEvents("youtube-wrapped")
 
