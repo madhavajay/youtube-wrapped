@@ -1,7 +1,7 @@
 // syftbox-sdk.js
 (function () {
   const LOCALHOST_URL = "http://localhost:7938/";
-  const INSTALL_URL = "https://syftbox.openmined.org/";
+  const INSTALL_URL = "https://syftbox.net/";
   const SYFTBOX_ICON_URL = "https://raw.githubusercontent.com/madhavajay/youtube-wrapped/refs/heads/main/assets/images/syftbox_icon.png";
 
   // Function to extract token from URL hash and store it in localStorage
@@ -413,7 +413,7 @@
           "Install SyftBox",
           "SyftBox",
           "Latest",
-          () => window.open("https://syftbox.openmined.org/", "_blank"),
+          () => window.open("https://syftbox.net/", "_blank"),
           iconUrl
         );
       }

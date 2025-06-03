@@ -10,30 +10,32 @@ import dateparser
 import jinja2
 import pandas as pd
 import requests
-from fastapi import BackgroundTasks, FastAPI, Request, UploadFile
+from fastapi import BackgroundTasks, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastsyftbox import Syftbox
+from fastsyftbox import FastSyftBox
 from loguru import logger
-from syft_core import Client as SyftboxClient
-from syft_core import SyftClientConfig
-from syft_event import SyftEvents
 
 from metadata import process_rows
 from resources import add_dataset, ensure_syft_yaml
 from utils import YoutubeDataPipelineState
+from wrapped import generate_wrapped_json
 
 syftbox_domain = "https://syftbox.net"
 
-box = SyftEvents("youtube-wrapped")
-
-config = SyftClientConfig.load()
-client = SyftboxClient(config)
 app_name = "youtube-wrapped"
-wrapped_path = client.datasite_path / "public" / app_name
-client.makedirs(wrapped_path)
 
-app_data_dir = Path(client.config.data_dir) / "private" / "app_data" / app_name
+app = FastSyftBox(
+    app_name=app_name,
+    syftbox_endpoint_tags=["syftbox"],
+    include_syft_openapi=True,
+)
+wrapped_path = app.syftbox_client.datasite_path / "public" / app_name
+app.syftbox_client.makedirs(wrapped_path)
+
+app_data_dir = (
+    Path(app.syftbox_client.config.data_dir) / "private" / "app_data" / app_name
+)
 app_data_dir.mkdir(parents=True, exist_ok=True)
 
 cache_dir = app_data_dir / "cache"
@@ -42,20 +44,8 @@ cache_dir.mkdir(parents=True, exist_ok=True)
 data_dir = app_data_dir / "data"
 data_dir.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(debug=True)
-syftbox = Syftbox(app=app, name=app_name)
 
-
-# @syftbox.on_request("/ping")
-# def ping_handler(ping: PingRequest) -> PongResponse:
-#     """Handle a ping request and return a pong response."""
-#     logger.info(f"Got ping request - {ping}")
-#     return PongResponse(
-#         msg=f"Pong from {box.client.email}",
-#         ts=datetime.now(timezone.utc),
-#     )
-
-ensure_syft_yaml(client)
+ensure_syft_yaml(app.syftbox_client)
 
 current_dir = Path(__file__).parent
 
@@ -102,7 +92,7 @@ def find_youtube_wrapped_html_files(base_path):
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def ui_home(request: Request):
     try:
-        other_files = find_youtube_wrapped_html_files(client.datasites)
+        other_files = find_youtube_wrapped_html_files(app.syftbox_client.datasites)
         print(other_files)
     except Exception as e:
         other_files = {}
@@ -163,7 +153,9 @@ async def ui_home(request: Request):
 
     template = jinja2.Template(template_content)
 
-    wrapped_url = f"{syftbox_domain}/datasites/{client.email}/public/youtube-wrapped/"
+    wrapped_url = (
+        f"{syftbox_domain}/datasites/{app.syftbox_client.email}/public/youtube-wrapped/"
+    )
     render_context = {
         "source_data_exists": pipeline_state.source_data_exists(),
         "enriched_data_exists": pipeline_state.enriched_data_exists(),
@@ -188,8 +180,6 @@ async def ui_home(request: Request):
         "syftbox_domain": syftbox_domain,
     }
 
-    # print(render_context)
-
     rendered_content = template.render(**render_context)
 
     return HTMLResponse(rendered_content)
@@ -198,7 +188,7 @@ async def ui_home(request: Request):
 @app.get("/summarize", response_class=JSONResponse, include_in_schema=False)
 async def summarize(request: Request, year: int | str = datetime.now().year - 1):
     try:
-        other_files = find_youtube_wrapped_html_files(client.datasites)
+        other_files = find_youtube_wrapped_html_files(app.syftbox_client.datasites)
         print(other_files)
     except Exception:
         other_files = {}
@@ -210,7 +200,7 @@ async def summarize(request: Request, year: int | str = datetime.now().year - 1)
 
     create_share_image(year, app_data_dir, cache_dir / f"youtube-wrapped-{year}.png")
     rendered_html = create_wrapped_page(
-        year, client, data_dir, cache_dir, other_files, syftbox_domain
+        year, app.syftbox_client, data_dir, cache_dir, other_files, syftbox_domain
     )
 
     return HTMLResponse(rendered_html)
@@ -242,7 +232,7 @@ async def start_processing(request: Request, background_tasks: BackgroundTasks):
 
         try:
             process_rows(
-                client=client,
+                client=app.syftbox_client,
                 youtube_api_key=youtube_api_token,
                 app_data_dir=app_data_dir,
                 watch_history_path=pipeline_state.get_watch_history_csv_path(),
@@ -319,10 +309,18 @@ async def ui_download(request: Request):
 
 
 async def process_upload(upload_path):
-    syft_uri = f"syft://{client.email}/private/youtube-wrapped/watch-history.html"
+    syft_uri = (
+        f"syft://{app.syftbox_client.email}/private/youtube-wrapped/watch-history.html"
+    )
     private_path = upload_path
     schema_name = "com.google.takeout.youtube.watch-history:1.0.0"
-    add_dataset(client, "watch-history-raw-html", syft_uri, private_path, schema_name)
+    add_dataset(
+        app.syftbox_client,
+        "watch-history-raw-html",
+        syft_uri,
+        private_path,
+        schema_name,
+    )
 
     import html as ihtml
     import re
@@ -435,10 +433,18 @@ async def process_upload(upload_path):
     # Save to CSV
     df.to_csv(data_dir / "watch-history.csv", index=False)
 
-    syft_uri = f"syft://{client.email}/private/youtube-wrapped/watch-history.csv"
+    syft_uri = (
+        f"syft://{app.syftbox_client.email}/private/youtube-wrapped/watch-history.csv"
+    )
     private_path = data_dir / "watch-history.csv"
     schema_name = "com.madhavajay.youtube-wrapped.watch-history-raw:1.0.0"
-    add_dataset(client, "watch-history-raw-csv", syft_uri, private_path, schema_name)
+    add_dataset(
+        app.syftbox_client,
+        "watch-history-raw-csv",
+        syft_uri,
+        private_path,
+        schema_name,
+    )
 
     print(f"Debug: Extracted {len(df)} entries and saved to watch-history.csv")
 
@@ -539,18 +545,20 @@ async def publish(year: int | str):
     """Endpoint to publish a wrapped HTML file for a given year."""
 
     try:
-        other_files = find_youtube_wrapped_html_files(client.datasites)
+        other_files = find_youtube_wrapped_html_files(app.syftbox_client.datasites)
         print(other_files)
     except Exception:
         other_files = {}
 
-    wrapped_path = client.datasite_path / "public" / app_name
+    wrapped_path = app.syftbox_client.datasite_path / "public" / app_name
 
     from share_image import create_share_image
     from wrapped import create_wrapped_page
 
     create_share_image(year, app_data_dir, cache_dir / f"youtube-wrapped-{year}.png")
-    create_wrapped_page(year, client, data_dir, cache_dir, other_files, syftbox_domain)
+    create_wrapped_page(
+        year, app.syftbox_client, data_dir, cache_dir, other_files, syftbox_domain
+    )
 
     shutil.copy(
         cache_dir / f"youtube-wrapped-{year}.html",
@@ -584,7 +592,7 @@ async def delete_enriched():
 @app.get("/unpublish", include_in_schema=False)
 async def unpublish(year: int | str):
     """Endpoint to publish a wrapped HTML file for a given year."""
-    wrapped_path = client.datasite_path / "public" / app_name
+    wrapped_path = app.syftbox_client.datasite_path / "public" / app_name
 
     if (wrapped_path / f"youtube-wrapped-{year}.html").exists():
         os.remove(wrapped_path / f"youtube-wrapped-{year}.html")
