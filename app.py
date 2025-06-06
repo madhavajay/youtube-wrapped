@@ -101,7 +101,7 @@ async def ui_home(request: Request):
     pipeline_state = YoutubeDataPipelineState(app_data_dir)
     template_path = current_dir / "assets" / "home.html"
 
-    with open(template_path) as f:
+    with open(template_path, encoding="utf-8") as f:
         template_content = f.read()
 
     years = pipeline_state.get_years()
@@ -115,7 +115,7 @@ async def ui_home(request: Request):
                     generate_wrapped_json(year, data_dir, cache_dir)
 
                 if json_file_path.exists():
-                    with open(json_file_path, "r") as json_file:
+                    with open(json_file_path, "r", encoding="utf-8") as json_file:
                         stats = json.load(json_file)
                         published = (
                             wrapped_path / f"youtube-wrapped-{year}.html"
@@ -135,7 +135,7 @@ async def ui_home(request: Request):
             if not json_file_path.exists():
                 generate_wrapped_json("all", data_dir, cache_dir)
             if json_file_path.exists():
-                with open(json_file_path, "r") as json_file:
+                with open(json_file_path, "r", encoding="utf-8") as json_file:
                     stats = json.load(json_file)
                     published = (wrapped_path / "youtube-wrapped-all.html").exists()
                     year_stats.append(
@@ -226,7 +226,7 @@ async def start_processing(request: Request, background_tasks: BackgroundTasks):
         youtube_api_token = None
         config_path = cache_dir / "config.json"
         if config_path.exists():
-            with config_path.open("r") as config_file:
+            with config_path.open("r", encoding="utf-8") as config_file:
                 config_data = json.load(config_file)
                 youtube_api_token = config_data.get("youtube-api-key", "")
 
@@ -298,7 +298,7 @@ async def ui_download(request: Request):
     pipeline_state = YoutubeDataPipelineState(app_data_dir)
     template_path = current_dir / "assets" / "download.html"
 
-    with open(template_path) as f:
+    with open(template_path, encoding="utf-8") as f:
         template_content = f.read()
 
     template = jinja2.Template(template_content)
@@ -468,7 +468,7 @@ async def upload_watch_history(request: Request):
         return HTMLResponse("Uploaded file is empty.", status_code=400)
 
     upload_path = data_dir / "watch-history.html"
-    with open(upload_path, "wb") as f:
+    with open(upload_path, "wb", encoding="utf-8") as f:
         f.write(contents)
     print(f"Debug: File written to {upload_path}")
 
@@ -485,7 +485,7 @@ async def api_setup(request: Request):
     # Check if the config file exists and load the API key
     youtube_api_token = None
     if config_path.exists():
-        with config_path.open("r") as config_file:
+        with config_path.open("r", encoding="utf-8") as config_file:
             config_data = json.load(config_file)
             youtube_api_token = config_data.get("youtube-api-key", "")
 
@@ -505,7 +505,7 @@ async def api_setup(request: Request):
         existing_api_token = None
 
         if config_path.exists():
-            with config_path.open("r") as config_file:
+            with config_path.open("r", encoding="utf-8") as config_file:
                 config_data = json.load(config_file)
                 existing_api_token = config_data.get("youtube-api-key", "")
 
@@ -525,7 +525,7 @@ async def api_setup(request: Request):
                 )
 
             config_data = {"youtube-api-key": youtube_api_token}
-            with config_path.open("w") as config_file:
+            with config_path.open("w", encoding="utf-8") as config_file:
                 json.dump(config_data, config_file)
 
         if not youtube_api_token:

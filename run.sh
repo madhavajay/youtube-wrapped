@@ -1,4 +1,5 @@
 #!/bin/bash
+export PYTHONUTF8=1
 
 rm -rf .venv
 uv venv -p 3.12

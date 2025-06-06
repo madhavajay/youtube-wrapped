@@ -24,13 +24,13 @@ class YoutubeDataPipelineState:
     def load_config(self) -> dict:
         """Loads the configuration from the config.json file."""
         if self.config_path.exists():
-            with self.config_path.open("r") as config_file:
+            with self.config_path.open("r", encoding="utf-8") as config_file:
                 return json.load(config_file)
         return {}
 
     def save_config(self):
         """Saves the current configuration to the config.json file."""
-        with self.config_path.open("w") as config_file:
+        with self.config_path.open("w", encoding="utf-8") as config_file:
             json.dump(self.config_data, config_file)
 
     def set_processing(self, processing: bool):
@@ -61,7 +61,7 @@ class YoutubeDataPipelineState:
 
     def setup_api_key(self) -> bool:
         if self.config_path.exists():
-            with self.config_path.open("r") as config_file:
+            with self.config_path.open("r", encoding="utf-8") as config_file:
                 config_data = json.load(config_file)
                 return "youtube-api-key" in config_data
         return False

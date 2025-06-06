@@ -240,7 +240,7 @@ def generate_wrapped_json(year: int | str, data_dir, cache_dir):
         json_stats["top_day_date_day_name"] = None
         json_stats["top_day_minutes"] = 0
 
-    with open(cache_dir / f"youtube-wrapped-{year}.json", "w") as f:
+    with open(cache_dir / f"youtube-wrapped-{year}.json", "w", encoding="utf-8") as f:
         f.write(json.dumps(json_stats))
 
 
@@ -250,7 +250,7 @@ def create_wrapped_page(
     generate_wrapped_json(year, data_dir, cache_dir)
 
     data = {}
-    with open(cache_dir / f"youtube-wrapped-{year}.json", "r") as f:
+    with open(cache_dir / f"youtube-wrapped-{year}.json", "r", encoding="utf-8") as f:
         data = json.load(f)
 
     # Prepare processed fields

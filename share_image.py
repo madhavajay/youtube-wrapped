@@ -1,18 +1,21 @@
-import requests
-import platform
-from PIL import Image
-from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
 import json
+import platform
+from io import BytesIO
+
+import requests
+from PIL import Image, ImageDraw, ImageFont
+
 
 def create_share_image(year, app_data_dir, output_path):
-    with open(app_data_dir / "cache" / f"youtube-wrapped-{year}.json") as f:
+    with open(
+        app_data_dir / "cache" / f"youtube-wrapped-{year}.json", encoding="utf-8"
+    ) as f:
         data = json.loads(f.read())
 
     year = str(data["year"])
     formatted_minutes = f"{data['total_minutes']:,}"
-    total_days = str(data['total_days'])
-    top_video = data['top_videos'][0]
+    total_days = str(data["total_days"])
+    top_video = data["top_videos"][0]
 
     top_video_thumb = data["top_videos_thumbs"][0]
 
@@ -49,7 +52,6 @@ def create_share_image(year, app_data_dir, output_path):
             lines.append(current_line)
 
         return lines
-    
 
     # Step 1: Create a square image
     size = 600
@@ -105,10 +107,10 @@ def create_share_image(year, app_data_dir, output_path):
     draw.text((40, video_y), "Top Video", font=stat_label_font, fill=(255, 0, 0))
 
     # Paste thumbnail lower
-    img.paste(thumbnail, (40, video_y+30))
+    img.paste(thumbnail, (40, video_y + 30))
 
     # Draw wrapped title lines lower
-    x, y = 170, video_y+40
+    x, y = 170, video_y + 40
     line_height = 25
     for line in lines[:3]:
         draw.text((x, y), line, font=video_title_font, fill=(255, 255, 255))
@@ -117,12 +119,18 @@ def create_share_image(year, app_data_dir, output_path):
     # Starting coordinates
     x_channel = 40
     y_channel = 430
-    draw.text((x_channel, y_channel), "Top Channels", font=stat_label_font, fill=(255, 0, 0))
+    draw.text(
+        (x_channel, y_channel), "Top Channels", font=stat_label_font, fill=(255, 0, 0)
+    )
     y_channel += 22
 
     for i, channel in enumerate(top_channels[:3]):
-        draw.text((x_channel, y_channel + i * 18), f"{i+1}. {channel}", font=syftbox_font, fill=(255, 255, 255))
-
+        draw.text(
+            (x_channel, y_channel + i * 18),
+            f"{i + 1}. {channel}",
+            font=syftbox_font,
+            fill=(255, 255, 255),
+        )
 
     logo = Image.open("./assets/images/mwsyftbox_white_on.png").convert("RGBA")
 
@@ -131,7 +139,9 @@ def create_share_image(year, app_data_dir, output_path):
 
     # Paste the logo onto your canvas image
     # (400, 550) is the top-left corner where it will be placed
-    img.paste(logo, (400, 500), logo)  # Use logo as its own mask to preserve transparency
+    img.paste(
+        logo, (400, 500), logo
+    )  # Use logo as its own mask to preserve transparency
 
     # Align logo top-right, level with the text "Youtube Wrapped"
     yt_width, yt_height = 60, 40
@@ -140,9 +150,7 @@ def create_share_image(year, app_data_dir, output_path):
 
     # Red pill background
     draw.rounded_rectangle(
-        [(yt_x, yt_y), (yt_x + yt_width, yt_y + yt_height)],
-        radius=10,
-        fill=(255, 0, 0)
+        [(yt_x, yt_y), (yt_x + yt_width, yt_y + yt_height)], radius=10, fill=(255, 0, 0)
     )
 
     # White triangle play icon, centered
